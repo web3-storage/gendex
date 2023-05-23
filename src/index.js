@@ -30,7 +30,7 @@ export default {
       /** @type {import('multiformats').UnknownLink} */
       let rootCID
       try {
-        rootCID = CID.parse(reqURL.pathname.split('/')[1])
+        rootCID = CID.parse(reqURL.pathname.split('/')[1]).toV1()
       } catch (err) {
         return new ErrorResponse('invalid CID', 400)
       }
@@ -61,19 +61,6 @@ export default {
         }
 
         const indexer = await CarIndexer.fromIterable(res.body)
-        // const indexer = await CarIndexer.fromIterable((async function * () {
-        //   const reader = res.body.getReader()
-
-        //   try {
-        //     while (true) {
-        //       const { done, value } = await reader.read()
-        //       if (done) return
-        //       yield value
-        //     }
-        //   } finally {
-        //     reader.releaseLock()
-        //   }
-        // })())
         const { writer, out } = MultihashIndexSortedWriter.create()
 
         ;(async () => {
