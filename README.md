@@ -11,7 +11,7 @@ POST /bafyDAGRootCID/bagyCARCID
 Example:
 
 ```sh
-curl -X POST https://gendex.worker/bafybeiaaacig2p32zjre4gmd7yz7xqisbdoxd735ofgtl3x73mfjwueoga/bagbaieran34obphcmkgqeebmfeohpcnuqazvmahd7bondhwff2c3h5gv4kha
+curl -X POST https://gendex.worker/bafybeia7yvvioltmupfxvkcfef75htxqbyylpot5ddxuzla5zaokjyrvfu/bagbaierai3ot5krlbplbapqbym5immraoercsqwz2v226i77dcxnxrfaazbq
 ```
 
 Note: if a DAG exists in multiple CARs, you'll need to send multiple requests with the same root CID for each CAR CID.
