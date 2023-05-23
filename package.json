@@ -1,0 +1,31 @@
+{
+  "name": "gendex",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "author": "Alan Shaw",
+  "license": "Apache-2.0 OR MIT",
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler publish",
+    "build": "esbuild --bundle src/index.js --format=esm --sourcemap --minify --outfile=dist/worker.mjs",
+    "build:debug": "esbuild --bundle src/index.js --format=esm --outfile=dist/worker.mjs",
+    "test": "npm run build:debug && mocha --experimental-vm-modules",
+    "lint": "standard"
+  },
+  "dependencies": {
+    "@ipld/car": "^5.1.1",
+    "@ipld/dag-json": "^10.1.0",
+    "cardex": "^1.0.1",
+    "dag-json": "^1.1.0",
+    "multiformats": "^11.0.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230518.0",
+    "esbuild": "^0.17.19",
+    "miniflare": "^2.14.0",
+    "mocha": "^10.2.0",
+    "standard": "^17.0.0",
+    "wrangler": "2.1.10"
+  }
+}
