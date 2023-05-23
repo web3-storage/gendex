@@ -14,6 +14,8 @@ Example:
 curl -X POST https://gendex.worker/bafybeiaaacig2p32zjre4gmd7yz7xqisbdoxd735ofgtl3x73mfjwueoga/bagbaieran34obphcmkgqeebmfeohpcnuqazvmahd7bondhwff2c3h5gv4kha
 ```
 
+Note: if a DAG exists in multiple CARs, you'll need to send multiple requests with the same root CID for each CAR CID.
+
 Response:
 
 ```json
