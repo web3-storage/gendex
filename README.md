@@ -9,8 +9,8 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 
 ## Usage
 
-* [`POST /shard/bafyDAGRootCID/bagyCARCID`](#post--car-bafyDAGRootCID-bagyCARCID)
-* [`POST /blocks/bafyDAGRootCID`](#post--blocks-bafyDAGRootCID)
+* [`POST /shard/bafyDAGRootCID/bagyCARCID`](#post-carbafyDAGRootCIDbagyCARCID)
+* [`POST /blocks/bafyDAGRootCID`](#post-blocksbafyDAGRootCID)
 
 ### `POST /shard/bafyDAGRootCID/bagyCARCID`
 
