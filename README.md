@@ -1,31 +1,39 @@
 # gendex
 
-Cloudflare worker to generate SATNAV and DUDEWHERE indexes for a given root CID + CAR CID. The CAR CID should already exist in CARPARK.
+<p>
+  <a href="https://github.com/web3-storage/gendex/actions/workflows/release.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/web3-storage/gendex/test.yml?branch=main&style=for-the-badge" /></a>
+  <a href="https://github.com/web3-storage/gendex/blob/main/LICENSE.md"><img alt="License: Apache-2.0 OR MIT" src="https://img.shields.io/badge/LICENSE-Apache--2.0%20OR%20MIT-yellow?style=for-the-badge" /></a>
+</p>
+
+Cloudflare worker to generate indexes for a given root CID. The CAR CID should already exist in CARPARK.
 
 ## Usage
 
-```
-POST /bafyDAGRootCID/bagyCARCID
-```
+* [`POST /shard/bafyDAGRootCID/bagyCARCID`](#post--car-bafyDAGRootCID-bagyCARCID)
+* [`POST /blocks/bafyDAGRootCID`](#post--blocks-bafyDAGRootCID)
+
+### `POST /shard/bafyDAGRootCID/bagyCARCID`
+
+Build a CAR index in SATNAV for `bagyCARCID` and add an entry in DUDEWHERE for the CAR for the root `bafyDAGRootCID`.
 
 Example:
 
 ```sh
-curl -X POST https://gendex.worker/bafybeia7yvvioltmupfxvkcfef75htxqbyylpot5ddxuzla5zaokjyrvfu/bagbaierai3ot5krlbplbapqbym5immraoercsqwz2v226i77dcxnxrfaazbq
+curl -X POST https://gendex.worker/shard/bafybeia7yvvioltmupfxvkcfef75htxqbyylpot5ddxuzla5zaokjyrvfu/bagbaierai3ot5krlbplbapqbym5immraoercsqwz2v226i77dcxnxrfaazbq
 ```
 
-Note: if a DAG exists in multiple CARs, you'll need to send multiple requests with the same root CID for each CAR CID.
+Note: if a DAG exists in multiple CARs, you"ll need to send multiple requests with the same root CID for each CAR CID.
 
 Response:
 
 ```json
 {
-  "car": {
+  "shard": {
     "/": "bagbaierai3ot5krlbplbapqbym5immraoercsqwz2v226i77dcxnxrfaazbq"
   },
-  "car_size": 980242,
+  "shard_size": 980242,
   "index_size": 110,
-  "origin_cars": [
+  "shards": [
     {
       "/": "bagbaiera5etmvuesawkbpt7wdcrahsy43rr7mpux5iki2asggb4ps27ovyta"
     },
@@ -80,3 +88,81 @@ Response:
   }
 }
 ```
+
+### `POST /blocks/bafyDAGRootCID`
+
+Build block indexes for `bafyDAGRootCID`.
+
+Note: block indexes are keyed by _raw_ CID. They are [multi-index indexes](https://github.com/alanshaw/cardex#multi-index-index) that index the block _as well as_ it's links.
+
+Example:
+
+```sh
+curl -X POST https://gendex.worker/blocks/bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm
+```
+
+Response:
+
+```json
+{
+  "blocks": [
+    {
+      "/": "bafkreiajkbmpugz75eg2tmocmp3e33sg5kuyq2amzngslahgn6ltmqxxfa"
+    },
+    {
+      "/": "bafkreia7wmluhebzfayp66yxdkaz5rp57pezn4ffksdth6qt6f2cl67f2a"
+    },
+    {
+      "/": "bafkreibfhit3emjewk2rzlibpxb6wiufz42pq2atofaa2eo3anqwfxvaui"
+    },
+    {
+      "/": "bafkreibgj6uwfebncr524o5djgt5ibx2lru4gns3lsoy7fy5ds35zrvk24"
+    },
+    {
+      "/": "bafkreibwp3p5adaxnk2y5ecqliqq3sqmwe66j2cxcmykn3tnxewdc47hie"
+    },
+    {
+      "/": "bafkreiclmncicyhuvouq4uy7m5522kzopgveu4nifsypsyzpols4sr5eka"
+    },
+    {
+      "/": "bafkreicpfqmunngoi5vixmfhbngefx5sdpo4tqbtbbdxdrgyuosohbki3i"
+    },
+    {
+      "/": "bafkreidqychd3wyw4rixs2avqdkvlp6q7is4w3c6q2ef5h4hx77rkmm6xa"
+    },
+    {
+      "/": "bafkreiejwbzaebwz36nbxndyjxmlxbngkj273wgbywzhquybxgkm5julha"
+    },
+    {
+      "/": "bafkreifhyo4ufquwtoslssrq33xd2oqf3efhsd4zhux4q2tnoibn7ghsiq"
+    },
+    {
+      "/": "bafkreifoj4o4ymxkgzsg7oxi2ygqzesbeym6dek6v4ilfpobtmtpq5hppi"
+    },
+    {
+      "/": "bafkreifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm"
+    },
+    {
+      "/": "bafkreifu5khfcsowea5arl2cdyafww6phowqpii3gqhcxsw7h2hysmqd4i"
+    },
+    {
+      "/": "bafkreig7fkwfagyrm2ahj56pemkrt5dhso4njmwne7dxizear4777apxee"
+    }
+  ],
+  "root": {
+    "/": "bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm"
+  },
+  "shards": [
+    {
+      "/": "bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q"
+    }
+  ]
+}
+```
+## Contributing
+
+Feel free to join in. All welcome. Please [open an issue](https://github.com/web3-storage/gendex/issues)!
+
+## License
+
+Dual-licensed under [MIT + Apache 2.0](https://github.com/web3-storage/gendex/blob/main/LICENSE.md)
