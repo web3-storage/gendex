@@ -1,3 +1,4 @@
+/* eslint-env browser */
 import { CID } from 'multiformats/cid'
 import { encode } from '@ipld/dag-json'
 import { CarIndexer } from '@ipld/car/indexer'
@@ -77,7 +78,7 @@ export default {
     }
 
     return new Response(encode({
-      root: root,
+      root,
       shard,
       shard_size: shardMeta.size,
       index_size: satNavMeta.size,

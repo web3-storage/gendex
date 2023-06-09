@@ -24,7 +24,7 @@ describe('gendex', () => {
       // it once before we run all tests in package.json, so disable it here.
       // This will override the option in wrangler.toml.
       buildCommand: undefined,
-      
+
       // wranglerConfigPath: 'test',
       modules: true,
       r2Buckets: ['CARPARK', 'SATNAV', 'DUDEWHERE', 'BLOCKLY']

@@ -1,3 +1,4 @@
+/* eslint-env browser */
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
