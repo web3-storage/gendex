@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import { CID } from 'multiformats/cid'
+import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
 import { sha256 } from 'multiformats/hashes/sha2'
@@ -53,7 +53,7 @@ export default {
     /** @type {import('multiformats').UnknownLink} */
     let root
     try {
-      root = CID.parse(pathParts[2]).toV1()
+      root = Link.parse(pathParts[2]).toV1()
     } catch (err) {
       return new ErrorResponse('invalid CID', 400)
     }
@@ -67,7 +67,7 @@ export default {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const blockCID = CID.createV1(raw.code, value.multihash).toString()
+        const blockCID = Link.create(raw.code, value.multihash).toString()
         let offsets = blockIndex.get(blockCID)
         if (!offsets) {
           /** @type {Map<ShardCID, Offset>} */
@@ -93,7 +93,8 @@ export default {
         throw err
       }
       for (const [, cid] of block.links()) {
-        const offsets = blockIndex.get(cid.toString())
+        const rawCID = Link.create(raw.code, cid.multihash)
+        const offsets = blockIndex.get(rawCID.toString())
         if (!offsets) return new ErrorResponse(`block not indexed: ${cid}`, 404)
         const [shard, offset] = offsets.has(parentShard) ? [parentShard, offsets.get(parentShard) ?? 0] : getAnyMapEntry(offsets)
         let blocks = shardIndex.get(shard)
@@ -101,17 +102,17 @@ export default {
           blocks = new Map()
           shardIndex.set(shard, blocks)
         }
-        blocks.set(cid.toString(), offset)
+        blocks.set(rawCID.toString(), offset)
       }
 
       const { readable, writable } = new TransformStream()
       const writer = MultiIndexWriter.createWriter({ writer: writable.getWriter() })
 
       for (const [shardCID, blocks] of shardIndex.entries()) {
-        writer.add(CID.parse(shardCID), async ({ writer }) => {
+        writer.add(Link.parse(shardCID), async ({ writer }) => {
           const index = MultihashIndexSortedWriter.createWriter({ writer })
           for (const [cid, offset] of blocks.entries()) {
-            index.add(CID.parse(cid), offset)
+            index.add(Link.parse(cid), offset)
           }
           await index.close()
         })
@@ -126,8 +127,8 @@ export default {
 
     return new Response(json.encode({
       root,
-      blocks: [...blockIndex.keys()].map(cid => CID.parse(cid)),
-      shards: shards.map(cid => CID.parse(cid))
+      blocks: [...blockIndex.keys()].map(cid => Link.parse(cid)),
+      shards: shards.map(cid => Link.parse(cid))
     }), { headers: { 'Content-Type': 'application/json' } })
   }
 }
