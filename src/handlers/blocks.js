@@ -5,6 +5,8 @@ import * as Block from 'multiformats/block'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { identity } from 'multiformats/hashes/identity'
 import { blake2b256 } from '@multiformats/blake2/blake2b'
+import * as Digest from 'multiformats/hashes/digest'
+import { base58btc } from 'multiformats/bases/base58'
 import { readBlockHead, asyncIterableReader } from '@ipld/car/decoder'
 import * as pb from '@ipld/dag-pb'
 import * as cbor from '@ipld/dag-cbor'
@@ -13,6 +15,7 @@ import { MultihashIndexSortedReader, MultihashIndexSortedWriter } from 'cardex'
 import { MultiIndexWriter } from 'cardex/multi-index'
 import { ErrorResponse } from '../lib/errors.js'
 import { listAll } from '../lib/r2.js'
+import { mhToString } from '../lib/multihash.js'
 
 /** @type {import('../bindings').BlockDecoders} */
 const Decoders = {
@@ -30,7 +33,7 @@ const Hashers = {
 }
 
 /**
- * @typedef {import('multiformats').ToString<import('multiformats').UnknownLink>} BlockCID
+ * @typedef {import('multiformats').ToString<import('multiformats').MultihashDigest, 'z'>} MultihashString
  * @typedef {import('multiformats').ToString<import('cardex/api.js').CARLink>} ShardCID
  * @typedef {number} Offset
  */
@@ -45,7 +48,7 @@ export default {
    * @param {unknown} ctx
    */
   async fetch (request, env, ctx) {
-    /** @type {Map<BlockCID, Map<ShardCID, Offset>>} */
+    /** @type {Map<MultihashString, Map<ShardCID, Offset>>} */
     const blockIndex = new Map()
 
     const reqURL = new URL(request.url)
@@ -67,24 +70,24 @@ export default {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const blockCID = Link.create(raw.code, value.multihash).toString()
-        let offsets = blockIndex.get(blockCID)
+        const blockMh = mhToString(value.multihash)
+        let offsets = blockIndex.get(blockMh)
         if (!offsets) {
           /** @type {Map<ShardCID, Offset>} */
           offsets = new Map()
-          blockIndex.set(blockCID, offsets)
+          blockIndex.set(blockMh, offsets)
         }
         offsets.set(shardCID, value.offset)
       }
     }
 
-    for (const [blockCID, offsets] of blockIndex) {
-      const key = `${blockCID}/${blockCID}.idx`
+    for (const [blockMh, offsets] of blockIndex) {
+      const key = `${blockMh}/${blockMh}.idx`
       if (await env.BLOCKLY.head(key)) continue
 
       const [parentShard, offset] = getAnyMapEntry(offsets)
-      /** @type {Map<ShardCID, Map<BlockCID, Offset>>} */
-      const shardIndex = new Map([[parentShard, new Map([[blockCID, offset]])]])
+      /** @type {Map<ShardCID, Map<MultihashString, Offset>>} */
+      const shardIndex = new Map([[parentShard, new Map([[blockMh, offset]])]])
       let block
       try {
         block = await getBlock(env.CARPARK, parentShard, offset)
@@ -93,8 +96,8 @@ export default {
         throw err
       }
       for (const [, cid] of block.links()) {
-        const rawCID = Link.create(raw.code, cid.multihash)
-        const offsets = blockIndex.get(rawCID.toString())
+        const linkMh = mhToString(cid.multihash)
+        const offsets = blockIndex.get(linkMh)
         if (!offsets) return new ErrorResponse(`block not indexed: ${cid}`, 404)
         const [shard, offset] = offsets.has(parentShard) ? [parentShard, offsets.get(parentShard) ?? 0] : getAnyMapEntry(offsets)
         let blocks = shardIndex.get(shard)
@@ -102,7 +105,7 @@ export default {
           blocks = new Map()
           shardIndex.set(shard, blocks)
         }
-        blocks.set(rawCID.toString(), offset)
+        blocks.set(linkMh, offset)
       }
 
       const { readable, writable } = new TransformStream()
@@ -111,8 +114,9 @@ export default {
       for (const [shardCID, blocks] of shardIndex.entries()) {
         writer.add(Link.parse(shardCID), async ({ writer }) => {
           const index = MultihashIndexSortedWriter.createWriter({ writer })
-          for (const [cid, offset] of blocks.entries()) {
-            index.add(Link.parse(cid), offset)
+          for (const [blockMh, offset] of blocks.entries()) {
+            const cid = Link.create(raw.code, Digest.decode(base58btc.decode(blockMh)))
+            index.add(cid, offset)
           }
           await index.close()
         })
@@ -127,7 +131,7 @@ export default {
 
     return new Response(json.encode({
       root,
-      blocks: [...blockIndex.keys()].map(cid => Link.parse(cid)),
+      blocks: [...blockIndex.keys()].map(mh => Link.create(raw.code, Digest.decode(base58btc.decode(mh)))),
       shards: shards.map(cid => Link.parse(cid))
     }), { headers: { 'Content-Type': 'application/json' } })
   }

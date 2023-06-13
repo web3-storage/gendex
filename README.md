@@ -93,7 +93,7 @@ Response:
 
 Build block indexes for `bafyDAGRootCID`.
 
-Note: block indexes are keyed by _raw_ CID. They are [multi-index indexes](https://github.com/alanshaw/cardex#multi-index-index) that index the block _as well as_ it's links.
+Note: block indexes are keyed by base58btc multibase encoded multihash. They are [multi-index indexes](https://github.com/alanshaw/cardex#multi-index-index) that index the block _as well as_ it's links.
 
 Example:
 

@@ -4,7 +4,9 @@ import assert from 'node:assert'
 import fs from 'node:fs'
 import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
+import { equals } from 'multiformats/bytes'
 import { MultiIndexReader } from 'cardex/multi-index'
+import { mhToString } from '../src/lib/multihash.js'
 
 const shard = Link.parse('bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q')
 const root = Link.parse('bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm')
@@ -70,9 +72,7 @@ describe('gendex', () => {
       const mh = mhashes.shift()
       if (!mh) break
 
-      const rawLink = Link.create(raw.code, mh)
-      console.log(rawLink.toString())
-      const res = await blockly.get(`${rawLink}/${rawLink}.idx`)
+      const res = await blockly.get(`${mhToString(mh)}/${mhToString(mh)}.idx`)
       assert(res)
 
       const reader = MultiIndexReader.createReader({ reader: res.body.getReader() })
@@ -80,10 +80,11 @@ describe('gendex', () => {
         const { done, value } = await reader.read()
         if (done) break
         // @ts-expect-error
-        const cid = Link.create(raw.code, value.multihash)
-        if (!cid.equals(rawLink)) {
-          console.log(`  ${Link.create(raw.code, mh).toString()} (${value.origin} @ ${value.offset})`)
-          mhashes.push(cid.multihash)
+        if (!equals(value.multihash.bytes, mh.bytes)) {
+          // @ts-expect-error
+          console.log(`  ${Link.create(raw.code, value.multihash).toString()} (${value.origin} @ ${value.offset})`)
+          // @ts-expect-error
+          mhashes.push(value.multihash)
         }
       }
     }
