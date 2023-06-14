@@ -8,16 +8,18 @@ import { blake2b256 } from '@multiformats/blake2/blake2b'
 import * as Digest from 'multiformats/hashes/digest'
 import { base58btc } from 'multiformats/bases/base58'
 import { fromString, toString } from 'multiformats/bytes'
-import { readBlockHead, asyncIterableReader } from '@ipld/car/decoder'
 import * as pb from '@ipld/dag-pb'
 import * as cbor from '@ipld/dag-cbor'
 import * as json from '@ipld/dag-json'
-import { MultihashIndexSortedReader, MultihashIndexSortedWriter } from 'cardex'
+import { MultihashIndexSortedWriter } from 'cardex'
 import { MultiIndexWriter } from 'cardex/multi-index'
+import { transform } from 'streaming-iterables'
 import { ErrorResponse } from '../lib/errors.js'
 import { listAll } from '../lib/r2.js'
 import { mhToString } from '../lib/multihash.js'
 import { iteratorToStream, streamToBlob } from '../lib/stream.js'
+import { MultiCarIndex, CarIndex } from '../lib/car-index.js'
+import { BatchingR2Blockstore } from '../lib/blockstore.js'
 
 /** @type {import('../bindings').BlockDecoders} */
 const Decoders = {
@@ -40,8 +42,7 @@ const Hashers = {
  * @typedef {number} Offset
  */
 
-// 2MB (max safe libp2p block size) + typical block header length + some leeway
-const MAX_ENCODED_BLOCK_LENGTH = (1024 * 1024 * 2) + 39 + 61
+const CONCURRENCY = 50
 
 export default {
   /**
@@ -50,9 +51,6 @@ export default {
    * @param {unknown} ctx
    */
   async fetch (request, env, ctx) {
-    /** @type {Map<MultihashString, Map<ShardCID, Offset>>} */
-    const blockIndex = new Map()
-
     const reqURL = new URL(request.url)
     const pathParts = reqURL.pathname.split('/')
     /** @type {import('multiformats').UnknownLink} */
@@ -65,54 +63,46 @@ export default {
 
     const shardKeys = await listAll(env.DUDEWHERE, `${root}/`)
     const shards = shardKeys.map(k => k.replace(`${root}/`, '')).filter(k => !k.startsWith('.'))
-    for (const shardCID of shards) {
-      const res = await env.SATNAV.get(`${shardCID}/${shardCID}.car.idx`)
-      if (!res) return new ErrorResponse(`missing SATNAV index: ${shardCID}`, 404)
-      const reader = MultihashIndexSortedReader.createReader({ reader: res.body.getReader() })
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const blockMh = mhToString(value.multihash)
-        let offsets = blockIndex.get(blockMh)
-        if (!offsets) {
-          /** @type {Map<ShardCID, Offset>} */
-          offsets = new Map()
-          blockIndex.set(blockMh, offsets)
-        }
-        offsets.set(shardCID, value.offset)
-      }
-    }
+
+    /** @type {import('../bindings').IndexSource[]} */
+    const indexSources = shards.map(shardCID => {
+      const key = `${shardCID}/${shardCID}.car.idx`
+      return { origin: Link.parse(shardCID), bucket: env.SATNAV, key }
+    })
+    console.log(indexSources)
+
+    const multiIndex = new MultiCarIndex()
+    const indexes = await Promise.all(indexSources.map(src => CarIndex.fromIndexSource(src)))
+    indexes.forEach(i => multiIndex.addIndex(i))
+    const blockstore = new BatchingR2Blockstore(env.CARPARK, multiIndex)
 
     return new Response(iteratorToStream((async function * () {
       try {
-        for (const [blockMh, offsets] of blockIndex) {
+        const indexedBlocks = transform(CONCURRENCY, async ({ origin, multihash, offset }) => {
+          const blockMh = mhToString(multihash)
           const key = `${blockMh}/${blockMh}.idx`
           if (await env.BLOCKLY.head(key)) {
-            yield ndjsonEncode({ multihash: blockMh })
-            continue
+            return { multihash: blockMh }
           }
 
-          const [parentShard, offset] = getAnyMapEntry(offsets)
-          /** @type {Map<ShardCID, Map<MultihashString, Offset>>} */
-          const shardIndex = new Map([[parentShard, new Map([[blockMh, offset]])]])
-          let block
-          try {
-            block = await getBlock(env.CARPARK, parentShard, offset)
-          } catch (err) {
-            if (err.code === 'ERR_MISSING_SHARD') return new ErrorResponse(err.message, 404)
-            throw err
-          }
+          const rawBlock = await blockstore.get(Link.create(raw.code, multihash))
+          if (!rawBlock) throw new Error(`missing index data for block: ${blockMh}`)
+          const block = await decodeBlock(rawBlock)
+
+          /** @type {Map<string, Map<MultihashString, Offset>>} */
+          const shardIndex = new Map([[origin.toString(), new Map([[blockMh, offset]])]])
+
           for (const [, cid] of block.links()) {
             const linkMh = mhToString(cid.multihash)
-            const offsets = blockIndex.get(linkMh)
-            if (!offsets) return new ErrorResponse(`block not indexed: ${cid}`, 404)
-            const [shard, offset] = offsets.has(parentShard) ? [parentShard, offsets.get(parentShard) ?? 0] : getAnyMapEntry(offsets)
-            let blocks = shardIndex.get(shard)
+            const indexItem = multiIndex.get(cid)
+            if (!indexItem) throw new Error(`missing index data for block: ${linkMh}`)
+
+            let blocks = shardIndex.get(indexItem.origin.toString())
             if (!blocks) {
               blocks = new Map()
-              shardIndex.set(shard, blocks)
+              shardIndex.set(indexItem.origin.toString(), blocks)
             }
-            blocks.set(linkMh, offset)
+            blocks.set(linkMh, indexItem.offset)
           }
 
           const { readable, writable } = new TransformStream()
@@ -138,7 +128,11 @@ export default {
             })()
           ])
 
-          yield ndjsonEncode({ multihash: blockMh })
+          return { multihash: blockMh }
+        }, multiIndex.values())
+
+        for await (const block of indexedBlocks) {
+          yield ndjsonEncode(block)
         }
       } catch (err) {
         console.error(err)
@@ -150,44 +144,13 @@ export default {
 }
 
 /**
- * @template K
- * @template V
- * @param {Map<K, V>} map
+ * @param {{ cid: import('multiformats').UnknownLink, bytes: Uint8Array }} block
  */
-function getAnyMapEntry (map) {
-  const { done, value } = map.entries().next()
-  if (done) throw new Error('empty map')
-  return value
-}
-
-/**
- * @param {import('@cloudflare/workers-types').R2Bucket} bucket
- * @param {string} shardCID
- * @param {number} offset
- */
-async function getBlock (bucket, shardCID, offset) {
-  const range = { offset, length: MAX_ENCODED_BLOCK_LENGTH }
-  const res = await bucket.get(`${shardCID}/${shardCID}.car`, { range })
-  if (!res) throw Object.assign(new Error(`missing shard: ${shardCID}`), { code: 'ERR_MISSING_SHARD' })
-
-  const reader = res.body.getReader()
-  const bytesReader = asyncIterableReader((async function * () {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) return
-      yield value
-    }
-  })())
-
-  const { cid, blockLength } = await readBlockHead(bytesReader)
-  const bytes = await bytesReader.exactly(blockLength)
-  reader.cancel()
-
+async function decodeBlock ({ cid, bytes }) {
   const decoder = Decoders[cid.code]
   if (!decoder) throw Object.assign(new Error(`missing decoder: ${cid.code}`), { code: 'ERR_MISSING_DECODER' })
   const hasher = Hashers[cid.multihash.code]
   if (!hasher) throw Object.assign(new Error(`missing hasher: ${cid.multihash.code}`), { code: 'ERR_MISSING_HASHER' })
-
   return await Block.decode({ bytes, codec: decoder, hasher })
 }
 

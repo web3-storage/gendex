@@ -20,7 +20,9 @@
     "cardex": "^2.2.2",
     "dag-json": "^1.1.0",
     "linkdex": "^2.1.2",
-    "multiformats": "^11.0.2"
+    "multiformats": "^11.0.2",
+    "p-defer": "^4.0.0",
+    "streaming-iterables": "^7.1.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230518.0",

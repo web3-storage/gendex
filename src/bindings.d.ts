@@ -1,6 +1,7 @@
 import type { R2Bucket } from '@cloudflare/workers-types'
 import type { BlockDecoder } from 'multiformats/codecs/interface'
 import type { MultihashHasher } from 'multiformats/hashes/interface'
+import type { CARLink } from 'cardex/api'
 
 export interface Env {
   CARPARK: R2Bucket
@@ -15,4 +16,13 @@ export interface BlockDecoders {
 
 export interface MultihashHashers {
   [code: number]: MultihashHasher<any>
+}
+
+export interface IndexSource {
+  /** Bucket this index can be found in */
+  bucket: R2Bucket
+  /** Bucket key for the source */
+  key: string
+  /** Origin CAR CID the index source applies to. */
+  origin: CARLink
 }
