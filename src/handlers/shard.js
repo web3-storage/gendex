@@ -57,7 +57,6 @@ export default {
 
       ;(async () => {
         for await (const { cid, offset } of indexer) {
-          console.log(`${cid} @ ${offset}`)
           await writer.add(cid, offset)
         }
         await writer.close()
