@@ -64,7 +64,7 @@ describe('gendex', () => {
 
     const res1 = await miniflare.dispatchFetch(`http://localhost:8787/blocks/${root}`, { method: 'POST' })
     assert.equal(res1.status, 200)
-    await assert.doesNotReject(res1.json().then(console.log))
+    await assert.doesNotReject(res1.text().then(console.log))
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
     const mhashes = [root.multihash]

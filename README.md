@@ -101,64 +101,27 @@ Example:
 curl -X POST https://gendex.worker/blocks/bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm
 ```
 
-Response:
+It returns an ndjson response - the multihashes of the blocks for which indexes were created:
 
 ```json
-{
-  "blocks": [
-    {
-      "/": "bafkreiajkbmpugz75eg2tmocmp3e33sg5kuyq2amzngslahgn6ltmqxxfa"
-    },
-    {
-      "/": "bafkreia7wmluhebzfayp66yxdkaz5rp57pezn4ffksdth6qt6f2cl67f2a"
-    },
-    {
-      "/": "bafkreibfhit3emjewk2rzlibpxb6wiufz42pq2atofaa2eo3anqwfxvaui"
-    },
-    {
-      "/": "bafkreibgj6uwfebncr524o5djgt5ibx2lru4gns3lsoy7fy5ds35zrvk24"
-    },
-    {
-      "/": "bafkreibwp3p5adaxnk2y5ecqliqq3sqmwe66j2cxcmykn3tnxewdc47hie"
-    },
-    {
-      "/": "bafkreiclmncicyhuvouq4uy7m5522kzopgveu4nifsypsyzpols4sr5eka"
-    },
-    {
-      "/": "bafkreicpfqmunngoi5vixmfhbngefx5sdpo4tqbtbbdxdrgyuosohbki3i"
-    },
-    {
-      "/": "bafkreidqychd3wyw4rixs2avqdkvlp6q7is4w3c6q2ef5h4hx77rkmm6xa"
-    },
-    {
-      "/": "bafkreiejwbzaebwz36nbxndyjxmlxbngkj273wgbywzhquybxgkm5julha"
-    },
-    {
-      "/": "bafkreifhyo4ufquwtoslssrq33xd2oqf3efhsd4zhux4q2tnoibn7ghsiq"
-    },
-    {
-      "/": "bafkreifoj4o4ymxkgzsg7oxi2ygqzesbeym6dek6v4ilfpobtmtpq5hppi"
-    },
-    {
-      "/": "bafkreifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm"
-    },
-    {
-      "/": "bafkreifu5khfcsowea5arl2cdyafww6phowqpii3gqhcxsw7h2hysmqd4i"
-    },
-    {
-      "/": "bafkreig7fkwfagyrm2ahj56pemkrt5dhso4njmwne7dxizear4777apxee"
-    }
-  ],
-  "root": {
-    "/": "bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm"
-  },
-  "shards": [
-    {
-      "/": "bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q"
-    }
-  ]
-}
+{"multihash":"zQmNy1SPkEn8dee73fiT63gPNsJxjUZJGZsT2j6dGPtZ41D"}
+{"multihash":"zQmQUPjhg9FZy4WDeWNryedLF5zE8fvh2TQaxQD9RKvoY8X"}
+{"multihash":"zQmQqyE7qbLNoysg3QeNyTcHwoz6zTbgyGzw9kvRM5niqrH"}
+{"multihash":"zQmQvCexSfUUVAzSS4yPMoQ3pGYoDVhHFTquy1A6Wf9f2pW"}
+{"multihash":"zQmS1Nw6RUkBunpmvpsRtyWLmiDThWDb9t1tMYqU64PWaTr"}
+{"multihash":"zQmTQw5a9wtfomFivQbrv1S8Q4aef2vKfzXQvoTiy3msNvB"}
+{"multihash":"zQmTfhvF7haihPBib9sckGzsdmBFWNeWbzjVJBvmZCA77WH"}
+{"multihash":"zQmVvnfkJxdKSUmtPzWyovhxN2XXAAjdrxvkdrPKC6LkPps"}
+{"multihash":"zQmXc8cXMMx5bpWPkNYPZZPkLahWKohJpiX7dHy59NvH5SF"}
+{"multihash":"zQmZdXtovGKQbsWp2FiXwimzyCbdoAgLS4wAkWh8QXpXrbD"}
+{"multihash":"zQma55cuZomjSTBP8m9DyYUo1PVYHLxL38ffhSQjihR6tk9"}
+{"multihash":"zQmaMk3JuGW2sDepNkdeycG6moX3x84qoK7dYnzheKUEUee"}
+{"multihash":"zQmaWsY8hE5xRWX97FRYGMAB1jYmoe3ZgcCDf28TTtfoN5P"}
+{"multihash":"zQmdMoNCxuyd4RiLFLdtMmUjGtGqU7kqqHfucRmPNm4PUJU"}
 ```
+
+If an error occurs mid stream, an object with an `error: string` property is output.
+
 ## Contributing
 
 Feel free to join in. All welcome. Please [open an issue](https://github.com/web3-storage/gendex/issues)!
