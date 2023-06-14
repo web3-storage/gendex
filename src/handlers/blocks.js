@@ -125,8 +125,11 @@ export default {
 
       await Promise.all([
         writer.close(),
-        // @ts-expect-error
-        (async () => env.BLOCKLY.put(key, await streamToBlob(readable)))()
+        (async () => {
+          const blob = await streamToBlob(readable)
+          // @ts-expect-error
+          await env.BLOCKLY.put(key, blob.stream())
+        })()
       ])
     }
 
