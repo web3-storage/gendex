@@ -57,13 +57,16 @@ export default {
 
       ;(async () => {
         for await (const { cid, offset } of indexer) {
+          console.log(`${cid} @ ${offset}`)
           await writer.add(cid, offset)
         }
         await writer.close()
       })()
 
+      const blob = await streamToBlob(readable)
+
       // @ts-expect-error
-      await env.SATNAV.put(satNavKey, await streamToBlob(readable))
+      await env.SATNAV.put(satNavKey, blob.stream())
 
       satNavMeta = await env.SATNAV.head(satNavKey)
       if (!satNavMeta) {
