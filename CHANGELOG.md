@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/web3-storage/gendex/compare/v1.2.1...v1.2.2) (2023-06-14)
+
+
+### Bug Fixes
+
+* log index writer error ([44c4b4c](https://github.com/web3-storage/gendex/commit/44c4b4c324c269398150fafb684dd148b54a4e8b))
+
 ## [1.2.1](https://github.com/web3-storage/gendex/compare/v1.2.0...v1.2.1) (2023-06-14)
 
 
