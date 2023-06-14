@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/web3-storage/gendex/compare/v1.0.0...v1.1.0) (2023-06-14)
+
+
+### Features
+
+* batching blockstore ([1183c16](https://github.com/web3-storage/gendex/commit/1183c16e872f722a20787023826d7198bcc14336))
+
 ## 1.0.0 (2023-06-14)
 
 
