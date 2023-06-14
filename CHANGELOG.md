@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/web3-storage/gendex/compare/v1.2.0...v1.2.1) (2023-06-14)
+
+
+### Bug Fixes
+
+* remove verbose logs ([0efcbef](https://github.com/web3-storage/gendex/commit/0efcbef7391e4274119937e20aff9cd3dbab9403))
+
 ## [1.2.0](https://github.com/web3-storage/gendex/compare/v1.1.0...v1.2.0) (2023-06-14)
 
 
