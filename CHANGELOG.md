@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/web3-storage/gendex/compare/v1.2.2...v1.2.3) (2023-06-14)
+
+
+### Bug Fixes
+
+* reduce concurrency and max lru items to stay within mem ([e9fff11](https://github.com/web3-storage/gendex/commit/e9fff112ad5d0bfaa4c3b1b72926cb32ae77233f))
+
 ## [1.2.2](https://github.com/web3-storage/gendex/compare/v1.2.1...v1.2.2) (2023-06-14)
 
 
