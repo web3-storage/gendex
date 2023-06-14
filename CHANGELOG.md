@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/web3-storage/gendex/compare/v1.2.3...v1.2.4) (2023-06-14)
+
+
+### Bug Fixes
+
+* always slice ([5caa48c](https://github.com/web3-storage/gendex/commit/5caa48c2b33eb2a10102825d603a9dfe224ed5c2))
+
 ## [1.2.3](https://github.com/web3-storage/gendex/compare/v1.2.2...v1.2.3) (2023-06-14)
 
 
