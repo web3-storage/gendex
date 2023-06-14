@@ -14,6 +14,7 @@ import * as json from '@ipld/dag-json'
 import { MultihashIndexSortedWriter } from 'cardex'
 import { MultiIndexWriter } from 'cardex/multi-index'
 import { transform } from 'streaming-iterables'
+import hashlru from 'hashlru'
 import { ErrorResponse } from '../lib/errors.js'
 import { listAll } from '../lib/r2.js'
 import { mhToString } from '../lib/multihash.js'
@@ -43,6 +44,9 @@ const Hashers = {
  */
 
 const CONCURRENCY = 50
+const MAX_CACHED_RECENT_INDEXES = 100000
+
+const recentIndexes = hashlru(MAX_CACHED_RECENT_INDEXES)
 
 export default {
   /**
@@ -81,7 +85,7 @@ export default {
         const indexedBlocks = transform(CONCURRENCY, async ({ origin, multihash, offset }) => {
           const blockMh = mhToString(multihash)
           const key = `${blockMh}/${blockMh}.idx`
-          if (await env.BLOCKLY.head(key)) {
+          if (recentIndexes.has(blockMh) || await env.BLOCKLY.head(key)) {
             return { multihash: blockMh }
           }
 
@@ -128,6 +132,7 @@ export default {
             })()
           ])
 
+          recentIndexes.set(blockMh, true)
           return { multihash: blockMh }
         }, multiIndex.values())
 

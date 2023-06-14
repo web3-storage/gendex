@@ -195,7 +195,7 @@ export class BatchingR2Blockstore extends R2Blockstore {
   /** @param {UnknownLink} cid */
   async get (cid) {
     // console.log(`get ${cid}`)
-    const entry = await this._idx.get(cid)
+    const entry = this._idx.get(cid)
     if (!entry) return
 
     this.#batcher.add(entry)
