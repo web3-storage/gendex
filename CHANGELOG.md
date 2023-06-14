@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/web3-storage/gendex/compare/v1.1.0...v1.2.0) (2023-06-14)
+
+
+### Features
+
+* add LRU cache ([14b32af](https://github.com/web3-storage/gendex/commit/14b32af06139b78851b63f2293e0f8bac5eb8f28))
+
 ## [1.1.0](https://github.com/web3-storage/gendex/compare/v1.0.0...v1.1.0) (2023-06-14)
 
 
