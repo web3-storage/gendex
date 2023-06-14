@@ -56,10 +56,14 @@ export default {
       const writer = MultihashIndexSortedWriter.createWriter({ writer: writable.getWriter() })
 
       ;(async () => {
-        for await (const { cid, offset } of indexer) {
-          await writer.add(cid, offset)
+        try {
+          for await (const { cid, offset } of indexer) {
+            await writer.add(cid, offset)
+          }
+          await writer.close()
+        } catch (err) {
+          console.error(err)
         }
-        await writer.close()
       })()
 
       const blob = await streamToBlob(readable)
