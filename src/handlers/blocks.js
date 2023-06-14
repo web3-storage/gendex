@@ -43,8 +43,8 @@ const Hashers = {
  * @typedef {number} Offset
  */
 
-const CONCURRENCY = 50
-const MAX_CACHED_RECENT_INDEXES = 100000
+const CONCURRENCY = 10
+const MAX_CACHED_RECENT_INDEXES = 10_000
 
 const recentIndexes = hashlru(MAX_CACHED_RECENT_INDEXES)
 
@@ -73,7 +73,6 @@ export default {
       const key = `${shardCID}/${shardCID}.car.idx`
       return { origin: Link.parse(shardCID), bucket: env.SATNAV, key }
     })
-    console.log(indexSources)
 
     const multiIndex = new MultiCarIndex()
     const indexes = await Promise.all(indexSources.map(src => CarIndex.fromIndexSource(src)))
