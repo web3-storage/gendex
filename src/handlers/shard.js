@@ -5,6 +5,7 @@ import { CarIndexer } from '@ipld/car/indexer'
 import { MultihashIndexSortedWriter } from 'cardex'
 import { ErrorResponse } from '../lib/errors.js'
 import { listAll } from '../lib/r2.js'
+import { streamToBlob } from '../lib/stream.js'
 
 const CAR_CODEC = 0x0202
 
@@ -62,7 +63,7 @@ export default {
       })()
 
       // @ts-expect-error
-      await env.SATNAV.put(satNavKey, readable)
+      await env.SATNAV.put(satNavKey, await streamToBlob(readable))
 
       satNavMeta = await env.SATNAV.head(satNavKey)
       if (!satNavMeta) {

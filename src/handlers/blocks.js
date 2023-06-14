@@ -16,6 +16,7 @@ import { MultiIndexWriter } from 'cardex/multi-index'
 import { ErrorResponse } from '../lib/errors.js'
 import { listAll } from '../lib/r2.js'
 import { mhToString } from '../lib/multihash.js'
+import { streamToBlob } from '../lib/stream.js'
 
 /** @type {import('../bindings').BlockDecoders} */
 const Decoders = {
@@ -125,7 +126,7 @@ export default {
       await Promise.all([
         writer.close(),
         // @ts-expect-error
-        env.BLOCKLY.put(key, readable)
+        (async () => env.BLOCKLY.put(key, await streamToBlob(readable)))()
       ])
     }
 
