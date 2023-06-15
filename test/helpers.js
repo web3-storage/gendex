@@ -1,5 +1,6 @@
 /* eslint-env mocha, browser */
 import assert from 'node:assert'
+import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import ndjson from 'ndjson'
 import * as Link from 'multiformats/link'
@@ -40,7 +41,8 @@ export async function putBlockIndex (endpoint, http, blockIndex, multihash, link
   const res = await http.dispatchFetch(new URL(`/block/${multihash}`, endpoint).toString(), {
     method: 'POST',
     // @ts-expect-error
-    body: writeMultiIndex(blockIndex, [multihash, ...links])
+    body: writeMultiIndex(blockIndex, [multihash, ...links]),
+    duplex: 'half'
   })
   assert.equal(res.status, 200)
   assert(res.body)
@@ -48,8 +50,7 @@ export async function putBlockIndex (endpoint, http, blockIndex, multihash, link
   /** @type {Array<{ multihash: import('../src/bindings').MultihashString, links: import('../src/bindings').MultihashString[] }>} */
   const results = []
   await pipeline(
-    // @ts-expect-error
-    res.body,
+    Readable.fromWeb(res.body),
     ndjson.parse(),
     async function (source) {
       for await (const item of source) {
@@ -86,7 +87,8 @@ export async function getBlockLinks (endpoint, http, blockIndex, multihash) {
   const res = await http.dispatchFetch(new URL(`/links/${multihash}`, endpoint).toString(), {
     method: 'POST',
     // @ts-expect-error
-    body: writeMultiIndex(blockIndex, [multihash])
+    body: writeMultiIndex(blockIndex, [multihash]),
+    duplex: 'half'
   })
   assert.equal(res.status, 200)
   assert(res.body)
