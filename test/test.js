@@ -1,4 +1,4 @@
-/* eslint-env mocha */
+/* eslint-env mocha, browser */
 import { Miniflare } from 'miniflare'
 import assert from 'node:assert'
 import fs from 'node:fs'
@@ -7,14 +7,18 @@ import * as raw from 'multiformats/codecs/raw'
 import { equals } from 'multiformats/bytes'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
+import { putShardIndex, getBlockIndex, getBlockLinks, putBlockIndex } from './helpers.js'
 
+const endpoint = new URL('http://localhost:8787')
 const fixtures = {
   single: {
     root: Link.parse('bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm'),
+    /** @type {import('cardex/api').CARLink[]} */
     shards: [Link.parse('bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q')]
   },
   multi: {
     root: Link.parse('bafybeicpxveeln3sd4scqlacrunxhzmvslnbgxa72evmqg7r27emdek464'),
+    /** @type {import('cardex/api').CARLink[]} */
     shards: [
       Link.parse('bagbaieraur6bggahneqqptodwweu4azhki6iqhbi6botmmcz4f5oacv32h7q'),
       Link.parse('bagbaieravlhwgwouaizt2zzwth6jdkerv5wolyxyuq4jxpvq3dasmlglgr7a'),
@@ -26,6 +30,8 @@ const fixtures = {
 describe('gendex', () => {
   /** @type {Miniflare} */
   let miniflare
+  /** @type {import('./helpers').Dispatcher} */
+  let dispatcher
 
   beforeEach(async () => {
     miniflare = new Miniflare({
@@ -36,12 +42,14 @@ describe('gendex', () => {
       // it once before we run all tests in package.json, so disable it here.
       // This will override the option in wrangler.toml.
       buildCommand: undefined,
-
+      globalAsyncIO: true,
       // wranglerConfigPath: 'test',
       modules: true,
       r2Buckets: ['CARPARK', 'SATNAV', 'DUDEWHERE', 'BLOCKLY']
       // ,r2Persist: true
     })
+    /** @ts-expect-error */
+    dispatcher = miniflare
   })
 
   it('generates shard indexes', async () => {
@@ -51,8 +59,7 @@ describe('gendex', () => {
       await fs.promises.readFile(`./test/fixtures/${fixtures.single.shards[0]}.car`)
     )
 
-    const res = await miniflare.dispatchFetch(`http://localhost:8787/shard/${fixtures.single.root}/${fixtures.single.shards[0]}`, { method: 'POST' })
-    assert.equal(res.status, 200)
+    const res = await putShardIndex(endpoint, dispatcher, fixtures.single.root, fixtures.single.shards[0])
     await assert.doesNotReject(res.json().then(console.log))
 
     const dudeWhere = await miniflare.getR2Bucket('DUDEWHERE')
@@ -73,12 +80,20 @@ describe('gendex', () => {
       await fs.promises.readFile(`./test/fixtures/${fixtures.single.shards[0]}.car`)
     )
 
-    const res0 = await miniflare.dispatchFetch(`http://localhost:8787/shard/${fixtures.single.root}/${fixtures.single.shards[0]}`, { method: 'POST' })
-    assert.equal(res0.status, 200)
+    await putShardIndex(endpoint, dispatcher, fixtures.single.root, fixtures.single.shards[0])
 
-    const res1 = await miniflare.dispatchFetch(`http://localhost:8787/blocks/${fixtures.single.root}`, { method: 'POST' })
-    assert.equal(res1.status, 200)
-    await assert.doesNotReject(res1.text().then(console.log))
+    const blockIndex = await getBlockIndex(endpoint, dispatcher, fixtures.single.root)
+    const rootMh = mhToString(fixtures.single.root.multihash)
+    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, rootMh)
+
+    /** @type {Array<{ multihash: import('../src/bindings').MultihashString, links: import('../src/bindings').MultihashString[] }>} */
+    const queue = [{ multihash: rootMh, links: rootLinks }]
+    while (true) {
+      const item = queue.shift()
+      if (!item) break
+      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.multihash, item.links)
+      queue.push(...links)
+    }
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
     const mhashes = [fixtures.single.root.multihash]
@@ -104,20 +119,28 @@ describe('gendex', () => {
     }
   })
 
-  it('generates block indexes multiple shards', async () => {
+  it('generates block indexes for multiple shards', async () => {
     const carPark = await miniflare.getR2Bucket('CARPARK')
     for (const shard of fixtures.multi.shards) {
       await carPark.put(
         `${shard}/${shard}.car`,
         await fs.promises.readFile(`./test/fixtures/${shard}.car`)
       )
-      const res = await miniflare.dispatchFetch(`http://localhost:8787/shard/${fixtures.multi.root}/${shard}`, { method: 'POST' })
-      assert.equal(res.status, 200)
+      await putShardIndex(endpoint, dispatcher, fixtures.multi.root, shard)
     }
 
-    const res = await miniflare.dispatchFetch(`http://localhost:8787/blocks/${fixtures.multi.root}`, { method: 'POST' })
-    assert.equal(res.status, 200)
-    await assert.doesNotReject(res.text().then(console.log))
+    const blockIndex = await getBlockIndex(endpoint, dispatcher, fixtures.multi.root)
+    const rootMh = mhToString(fixtures.multi.root.multihash)
+    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, rootMh)
+
+    /** @type {Array<{ multihash: import('../src/bindings').MultihashString, links: import('../src/bindings').MultihashString[] }>} */
+    const queue = [{ multihash: rootMh, links: rootLinks }]
+    while (true) {
+      const item = queue.shift()
+      if (!item) break
+      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.multihash, item.links)
+      queue.push(...links)
+    }
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
     const mhashes = [fixtures.multi.root.multihash]

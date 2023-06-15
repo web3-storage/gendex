@@ -30,6 +30,7 @@
     "esbuild": "^0.17.19",
     "miniflare": "^2.14.0",
     "mocha": "^10.2.0",
+    "ndjson": "^2.0.0",
     "standard": "^17.0.0",
     "wrangler": "2.1.10"
   },

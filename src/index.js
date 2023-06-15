@@ -1,10 +1,18 @@
 import { ErrorResponse } from './lib/errors.js'
 import shard from './handlers/shard.js'
-import blocks from './handlers/blocks.js'
+import block from './handlers/block.js'
+import index from './handlers/index.js'
+import links from './handlers/links.js'
 
 const Handlers = {
-  '/shard': shard,
-  '/blocks': blocks
+  GET: {
+    '/index/': index
+  },
+  POST: {
+    '/shard/': shard,
+    '/block/': block,
+    '/links/': links
+  }
 }
 
 export default {
@@ -15,15 +23,16 @@ export default {
    */
   async fetch (request, env, ctx) {
     try {
-      if (request.method !== 'POST') {
-        return new ErrorResponse('method not allowed', 405)
-      }
+      const handlers = Handlers[request.method]
+      if (!handlers) return new ErrorResponse('method not allowed', 405)
+
       const url = new URL(request.url)
-      for (const [path, handler] of Object.entries(Handlers)) {
+      for (const [path, handler] of Object.entries(handlers)) {
         if (url.pathname.startsWith(path)) {
           return await handler.fetch(request, env, ctx)
         }
       }
+
       return new ErrorResponse('not found', 404)
     } catch (err) {
       console.error(err)

@@ -10,7 +10,9 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 ## Usage
 
 * [`POST /shard/bafyDAGRootCID/bagyCARCID`](#post-shardbafydagrootcidbagycarcid)
-* [`POST /blocks/bafyDAGRootCID`](#post-blocksbafydagrootcid)
+* [`POST /block/zQmBlockMultihash`](#post-blockzqmblockmultihash)
+* [`POST /links/zQmBlockMultihash`](#post-linkszqmblockmultihash)
+* [`GET /index/bafyDAGRootCID`](#get-indexbafydagrootcid)
 
 ### `POST /shard/bafyDAGRootCID/bagyCARCID`
 
@@ -89,35 +91,61 @@ Response:
 }
 ```
 
-### `POST /blocks/bafyDAGRootCID`
+### `POST /block/zQmBlockMultihash`
 
-Build block indexes for `bafyDAGRootCID`.
+Build block index for `zQmBlockMultihash` (a base58 encoded block multihash).
+
+The request body should be a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) with the index information for the block AND it's links.
 
 Note: block indexes are keyed by base58btc multibase encoded multihash. They are [multi-index indexes](https://github.com/alanshaw/cardex#multi-index-index) that index the block _as well as_ it's links.
 
 Example:
 
 ```sh
-curl -X POST https://gendex.worker/blocks/bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm
+curl -X POST https://gendex.worker/block/zQmdMoNCxuyd4RiLFLdtMmUjGtGqU7kqqHfucRmPNm4PUJU
 ```
 
-It returns an ndjson response - the multihashes of the blocks for which indexes were created:
+It returns an ndjson response, a list of blocks the block links to and the multihashes of _their_ links. The last item output is always the indexed block itself.
 
 ```json
-{"multihash":"zQmNy1SPkEn8dee73fiT63gPNsJxjUZJGZsT2j6dGPtZ41D"}
-{"multihash":"zQmQUPjhg9FZy4WDeWNryedLF5zE8fvh2TQaxQD9RKvoY8X"}
-{"multihash":"zQmQqyE7qbLNoysg3QeNyTcHwoz6zTbgyGzw9kvRM5niqrH"}
-{"multihash":"zQmQvCexSfUUVAzSS4yPMoQ3pGYoDVhHFTquy1A6Wf9f2pW"}
-{"multihash":"zQmS1Nw6RUkBunpmvpsRtyWLmiDThWDb9t1tMYqU64PWaTr"}
-{"multihash":"zQmTQw5a9wtfomFivQbrv1S8Q4aef2vKfzXQvoTiy3msNvB"}
-{"multihash":"zQmTfhvF7haihPBib9sckGzsdmBFWNeWbzjVJBvmZCA77WH"}
-{"multihash":"zQmVvnfkJxdKSUmtPzWyovhxN2XXAAjdrxvkdrPKC6LkPps"}
-{"multihash":"zQmXc8cXMMx5bpWPkNYPZZPkLahWKohJpiX7dHy59NvH5SF"}
-{"multihash":"zQmZdXtovGKQbsWp2FiXwimzyCbdoAgLS4wAkWh8QXpXrbD"}
-{"multihash":"zQma55cuZomjSTBP8m9DyYUo1PVYHLxL38ffhSQjihR6tk9"}
-{"multihash":"zQmaMk3JuGW2sDepNkdeycG6moX3x84qoK7dYnzheKUEUee"}
-{"multihash":"zQmaWsY8hE5xRWX97FRYGMAB1jYmoe3ZgcCDf28TTtfoN5P"}
-{"multihash":"zQmdMoNCxuyd4RiLFLdtMmUjGtGqU7kqqHfucRmPNm4PUJU"}
+{
+  "multihash": "zQmaXv8NLDFUV3roNYBAsvTihgpHCPSDUdLGnBnV8DibrJr",
+  "links": [
+    "zQmPhv4ZVqUaqnPpNXQankK235Khwhs5KmSswtWxVg5i4it",
+    "zQmdvzS9Z6rb3NE6gG6hKPKi1EerQsQF16MmRQVDCCFQm9x",
+    "zQmTgsEszfX6PxKpbgvNyhzPY1EWWzQxoDy2Qvzhp4xATEW",
+    "zQmdj6kU59VYJMdpdJokwyFJ9z8yrEqE41dF15y3VnWbRR8",
+    "zQmV1vqa2SKPA3q9rWcEuSULYigC9r2ZF7Gt28TfVNBTPFM",
+    "zQmTzxphhupYmvWMHaJrEJfTmnUNx9KFGzz2XkQMnhsA9n1",
+    "zQmcuYSwqjsL7FiiQvymVAk4x8ot65h2ZRZ6UY9PRwpi2tc",
+    "zQmba71bwAPzcjSQQErVqXXw5oAy2BHLgbrg3Bdx7sMwT8r",
+    "zQmdWJtBkiX5rLG2UnhmS9EGbNNjyZZkY1eQL4m7tvnzaVi",
+    "zQmdnMe7Kcu7wjN2LscmYJXS3ovkkRZ61WiqptcxUYJcJsH",
+    "zQmf9AVv98df1yN1L1NcSDgqSAxEFqJQiJsy65HeENWLvyb",
+    "zQmPyVJDj5Xx54oKdyQoPo1cgciHvecBYRV3mMJv8fherw7",
+    "zQmZww1aYxYk4W3TDrtrbXqVpwYqsnbh8ufKwgDXowKDNTE",
+    "zQmQmbnK86RkmwTUxLmboZLbaL4SRSfy6PNFcWifxM4v7zE",
+    "zQmT44XBoR8rUHfKGF6Q1iEWLX1FpS2VAaH6Hemwrk4XsgL",
+    "zQmNSsNa2AdPc39mfGvmTu5KKL9yTsCWuFwzB43tzCtGhAe",
+    "zQmWrPmwC7TmdWjN6252d7XaZjn82fJvHehzdNWJbVm9kC8",
+    "zQmNczf3oWcDPzCMdkDD1o4YnTx3o7cpkz7LWBx2ejAGFQQ",
+    "zQmYTJ8zsHvGmM1TCXW7h8bss2fXK15GqqohtUgfQNpjcmP",
+    "zQmUQuVCqnj281U42ges6zNGQBov4VuUTf4q63CFNMY8cbv",
+    "zQmXSgWgTZBCZjirFF2MraZGpnVyqP82Q8v9Rz3DgVLYFKp",
+    "zQmcKnC16JfEK7ZFBGa4wCr9sDKR2Qheyha3FdMT43XNH6R",
+    "zQmNSP4q8evhaXytQoLbSH3qw7i3j6ZxwUnwBKM2oRnKoYN",
+    "zQmZUaRQzkWuF18SaAqR3fxKGYfQrhyReFRdu6BuN7wXy3u",
+    "zQmSh44TggA2FEXv894WiNaWyNCDQQroz6sQLmFD6tDrksh",
+    "zQmPNHsUXwGxUgUsgP34SL7X8PRinsWSwRboUbcQjfZHTSW",
+    "zQmWo4J7GLiFiekNtvqBNtB7q2zPkM2miXZHkYkMvZ5uhVE",
+    "zQmWbaE8X6mGjL7QfPV2kbBCZBrUnzzHupcBCZMthfPqhSy",
+    "zQmeaf7na2PrtDtgmHvUSMHgjjNpwxoAbTk8cy45WhsjSKF",
+    "zQmbiZVJFG2bWxWsSNnP1XrbFHnMzR9D9biZuyrTs8LGDid",
+    "zQmda6RQ7GcdgJoVsPzDToCMvdEFGjd8d5bMckGG8ykzrwD",
+    "zQmRC6eVvWWPpAxjJW9J4JvVbdJw6mFywquJogKWpRUrizZ",
+    "zQmW2sGYHM2AwXh7G8gFbA6y3wct65a5vKuxzg9ZniJga8S"
+  ]
+}
 ```
 
 If an error occurs mid stream, an object with an `error: string` property is output.
