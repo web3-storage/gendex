@@ -10,8 +10,8 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 ## Usage
 
 * [`POST /shard/bafyDAGRootCID/bagyCARCID`](#post-shardbafydagrootcidbagycarcid)
-* [`POST /block/zQmBlockMultihash`](#post-blockzqmblockmultihash)
-* [`POST /links/zQmBlockMultihash`](#post-linkszqmblockmultihash)
+* [`POST /block/bafyBlockCID`](#post-blockbafyblockcid)
+* [`POST /links/bafyBlockCID`](#post-linksbafyblockcid)
 * [`GET /index/bafyDAGRootCID`](#get-indexbafydagrootcid)
 
 ### `POST /shard/bafyDAGRootCID/bagyCARCID`
@@ -91,9 +91,9 @@ Response:
 }
 ```
 
-### `POST /block/zQmBlockMultihash`
+### `POST /block/bafyBlockCID`
 
-Build block index for `zQmBlockMultihash` (a base58 encoded block multihash).
+Build block index for `bafyBlockCID`.
 
 The request body should be a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) with the index information for the block AND it's links.
 

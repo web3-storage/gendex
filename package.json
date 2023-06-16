@@ -16,10 +16,12 @@
   "dependencies": {
     "@ipld/car": "^5.1.1",
     "@ipld/dag-json": "^10.1.0",
+    "@ipld/dag-pb": "^4.0.3",
     "@multiformats/blake2": "^1.0.13",
-    "cardex": "^2.2.2",
+    "cardex": "^2.2.3",
     "dag-json": "^1.1.0",
     "hashlru": "^2.3.0",
+    "ipfs-unixfs": "^11.0.1",
     "linkdex": "^2.1.2",
     "multiformats": "^11.0.2",
     "p-defer": "^4.0.0",

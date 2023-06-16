@@ -1,4 +1,8 @@
 /* eslint-env browser */
+import * as Link from 'multiformats/link'
+import * as json from '@ipld/dag-json'
+import * as dagpb from '@ipld/dag-pb'
+import { UnixFS } from 'ipfs-unixfs'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { getBlock } from '../lib/r2-block.js'
 import { mhToString } from '../lib/multihash.js'
@@ -13,8 +17,9 @@ export default {
   async fetch (request, env, ctx) {
     const reqURL = new URL(request.url)
     const pathParts = reqURL.pathname.split('/')
+    const blockCID = Link.parse(pathParts[2])
     /** @type {import('../bindings').MultihashString} */
-    const blockMh = pathParts[2]
+    const blockMh = mhToString(blockCID.multihash)
 
     if (!request.body) return new ErrorResponse('missing index data', 400)
     const indexReader = MultiIndexReader.createReader({ reader: request.body.getReader() })
@@ -35,8 +40,12 @@ export default {
     const block = await getBlock(env.CARPARK, indexItem.origin.toString(), indexItem.offset)
     const blockLinks = [...block.links()].map(([, cid]) => cid)
 
+    const meta = block.cid.code === dagpb.code
+      ? { type: UnixFS.unmarshal(block.value.Data).type }
+      : {}
+
     return new Response(
-      JSON.stringify(blockLinks.map(cid => mhToString(cid.multihash))),
+      json.encode({ cid: blockCID, links: blockLinks, meta }),
       { headers: { 'Content-Type': 'application/json' } }
     )
   }

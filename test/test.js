@@ -83,15 +83,14 @@ describe('gendex', () => {
     await putShardIndex(endpoint, dispatcher, fixtures.single.root, fixtures.single.shards[0])
 
     const blockIndex = await getBlockIndex(endpoint, dispatcher, fixtures.single.root)
-    const rootMh = mhToString(fixtures.single.root.multihash)
-    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, rootMh)
+    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.single.root)
 
-    /** @type {Array<{ multihash: import('../src/bindings').MultihashString, links: import('../src/bindings').MultihashString[] }>} */
-    const queue = [{ multihash: rootMh, links: rootLinks }]
+    /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
+    const queue = [{ cid: fixtures.single.root, links: rootLinks }]
     while (true) {
       const item = queue.shift()
       if (!item) break
-      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.multihash, item.links)
+      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
       queue.push(...links)
     }
 
@@ -130,15 +129,14 @@ describe('gendex', () => {
     }
 
     const blockIndex = await getBlockIndex(endpoint, dispatcher, fixtures.multi.root)
-    const rootMh = mhToString(fixtures.multi.root.multihash)
-    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, rootMh)
+    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.multi.root)
 
-    /** @type {Array<{ multihash: import('../src/bindings').MultihashString, links: import('../src/bindings').MultihashString[] }>} */
-    const queue = [{ multihash: rootMh, links: rootLinks }]
+    /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
+    const queue = [{ cid: fixtures.multi.root, links: rootLinks }]
     while (true) {
       const item = queue.shift()
       if (!item) break
-      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.multihash, item.links)
+      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
       queue.push(...links)
     }
 

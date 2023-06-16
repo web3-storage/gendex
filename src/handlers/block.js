@@ -3,10 +3,13 @@ import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import * as Digest from 'multiformats/hashes/digest'
 import { base58btc } from 'multiformats/bases/base58'
-import { fromString } from 'multiformats/bytes'
+import { toString, fromString } from 'multiformats/bytes'
 import { MultihashIndexSortedWriter } from 'cardex'
 import { MultiIndexWriter, MultiIndexReader } from 'cardex/multi-index'
 import { transform } from 'streaming-iterables'
+import * as json from '@ipld/dag-json'
+import * as dagpb from '@ipld/dag-pb'
+import { UnixFS } from 'ipfs-unixfs'
 import { getBlock } from '../lib/r2-block.js'
 import { mhToString } from '../lib/multihash.js'
 import { iteratorToStream, streamToBlob } from '../lib/stream.js'
@@ -24,8 +27,9 @@ export default {
   async fetch (request, env, ctx) {
     const reqURL = new URL(request.url)
     const pathParts = reqURL.pathname.split('/')
+    const blockCID = Link.parse(pathParts[2])
     /** @type {import('../bindings').MultihashString} */
-    const blockMh = pathParts[2]
+    const blockMh = mhToString(blockCID.multihash)
 
     if (!request.body) return new ErrorResponse('missing index data', 400)
     const indexReader = MultiIndexReader.createReader({ reader: request.body.getReader() })
@@ -62,7 +66,10 @@ export default {
           if (!offsets) throw new Error(`block not indexed: ${link}`)
           const [shard, offset] = getAnyMapEntry(offsets)
           const linkBlock = await getBlock(env.CARPARK, shard, offset)
-          return { multihash: linkMh, links: [...linkBlock.links()].map(([, cid]) => mhToString(cid.multihash)) }
+          const meta = linkBlock.cid.code === dagpb.code
+            ? { type: UnixFS.unmarshal(linkBlock.value.Data).type }
+            : {}
+          return { cid: link, links: [...linkBlock.links()].map(([, cid]) => cid), meta }
         }, blockLinks)
 
         for await (const block of linkLinks) {
@@ -109,9 +116,13 @@ export default {
           })()
         ])
 
+        const meta = block.cid.code === dagpb.code
+          ? { type: UnixFS.unmarshal(block.value.Data).type }
+          : {}
+
         // finally, write the block multihash and it's links to the stream
         // this signifies that we completed successfully.
-        yield ndjsonEncode({ multihash: blockMh, links: blockLinks.map(cid => mhToString(cid.multihash)) })
+        yield ndjsonEncode({ cid: blockCID, links: blockLinks, meta })
       } catch (err) {
         console.error(err)
         yield ndjsonEncode({ error: err.message })
@@ -123,5 +134,5 @@ export default {
 
 /** @param {any} data */
 function ndjsonEncode (data) {
-  return fromString(`${JSON.stringify(data)}\n`)
+  return fromString(`${toString(json.encode(data))}\n`)
 }
