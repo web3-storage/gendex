@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/web3-storage/gendex/compare/v1.2.4...v1.3.0) (2023-06-15)
+
+
+### Features
+
+* script to create indexes ([526f5c0](https://github.com/web3-storage/gendex/commit/526f5c0b6c4b525f451232b56aa46ea081166857))
+
 ## [1.2.4](https://github.com/web3-storage/gendex/compare/v1.2.3...v1.2.4) (2023-06-14)
 
 
