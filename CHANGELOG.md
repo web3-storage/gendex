@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/web3-storage/gendex/compare/v1.3.0...v2.0.0) (2023-06-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* switch to CID based API
+
+### Features
+
+* switch to CID based API ([1b54714](https://github.com/web3-storage/gendex/commit/1b54714dd63ba277aeba3dc177b648e0c4bf0a26))
+
 ## [1.3.0](https://github.com/web3-storage/gendex/compare/v1.2.4...v1.3.0) (2023-06-15)
 
 
