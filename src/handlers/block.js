@@ -66,9 +66,7 @@ export default {
           if (!offsets) throw new Error(`block not indexed: ${link}`)
           const [shard, offset] = getAnyMapEntry(offsets)
           const linkBlock = await getBlock(env.CARPARK, shard, offset)
-          const meta = linkBlock.cid.code === dagpb.code
-            ? { type: UnixFS.unmarshal(linkBlock.value.Data).type }
-            : {}
+          const meta = linkBlock.cid.code === dagpb.code ? getUnixFsMeta(linkBlock.value.Data) : {}
           return { cid: link, links: [...linkBlock.links()].map(([, cid]) => cid), meta }
         }, blockLinks)
 
@@ -116,9 +114,7 @@ export default {
           })()
         ])
 
-        const meta = block.cid.code === dagpb.code
-          ? { type: UnixFS.unmarshal(block.value.Data).type }
-          : {}
+        const meta = block.cid.code === dagpb.code ? getUnixFsMeta(block.value.Data) : {}
 
         // finally, write the block multihash and it's links to the stream
         // this signifies that we completed successfully.
@@ -129,6 +125,15 @@ export default {
         throw err
       }
     })()), { headers: { 'Content-Type': 'application/x-ndjson' } })
+  }
+}
+
+/** @param {Uint8Array} data */
+function getUnixFsMeta (data) {
+  try {
+    return { type: UnixFS.unmarshal(data).type }
+  } catch {
+    return {}
   }
 }
 
