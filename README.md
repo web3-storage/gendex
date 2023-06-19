@@ -9,11 +9,11 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 
 ## Usage
 
-* [`POST /shard/:root-cid/:car-cid`](#post-shardrootcidcarcid)
-* [`POST /links/:cid`](#post-linkscid)
-* [`HEAD /block/:cid`](#head-blockcid)
-* [`PUT /block/:cid`](#put-blockcid)
-* [`GET /index/:cid`](#get-indexcid)
+* [`POST /shard/:root-cid/:car-cid`](#post-shardrootcidcarcid) - Build a CAR index.
+* [`POST /links/:cid`](#post-linkscid) - Get block links.
+* [`HEAD /block/:cid`](#head-blockcid) - Determine if block index exists.
+* [`PUT /block/:cid`](#put-blockcid) - Put a block index.
+* [`GET /index/:cid`](#get-indexcid) - Get index for DAG.
 
 ### `POST /shard/:root-cid/:car-cid`
 
