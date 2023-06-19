@@ -14,6 +14,7 @@ command = "npm run build:debug"
 # PROD!
 [env.production]
 account_id = "fffa4b4363a7e5250af8357087263b3a"
+route = { pattern = "gendex.dag.haus/*", zone_id = "f2f8a5b1c557202c6e3d0ce0e98e4c8e" }
 r2_buckets = [
   { binding = "CARPARK", bucket_name = "carpark-prod-0" },
   { binding = "DUDEWHERE", bucket_name = "dudewhere-prod-0" },
@@ -27,6 +28,7 @@ command = "npm run build"
 # Staging!
 [env.staging]
 account_id = "fffa4b4363a7e5250af8357087263b3a"
+route = { pattern = "gendex-staging.dag.haus/*", zone_id = "f2f8a5b1c557202c6e3d0ce0e98e4c8e" }
 r2_buckets = [
   { binding = "CARPARK", bucket_name = "carpark-staging-0" },
   { binding = "DUDEWHERE", bucket_name = "dudewhere-staging-0" },
