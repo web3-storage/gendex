@@ -9,15 +9,15 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 
 ## Usage
 
-* [`POST /shard/bafyDAGRootCID/bagyCARCID`](#post-shardbafydagrootcidbagycarcid)
-* [`POST /links/bafyBlockCID`](#post-linksbafyblockcid)
-* [`HEAD /block/bafyBlockCID`](#head-blockbafyblockcid)
-* [`PUT /block/bafyBlockCID`](#put-blockbafyblockcid)
-* [`GET /index/bafyDAGRootCID`](#get-indexbafydagrootcid)
+* [`POST /shard/:root-cid/:car-cid`](#post-shardrootcidcarcid)
+* [`POST /links/:cid`](#post-linkscid)
+* [`HEAD /block/:cid`](#head-blockcid)
+* [`PUT /block/:cid`](#put-blockcid)
+* [`GET /index/:cid`](#get-indexcid)
 
-### `POST /shard/bafyDAGRootCID/bagyCARCID`
+### `POST /shard/:root-cid/:car-cid`
 
-Build a CAR index in SATNAV for `bagyCARCID` and add an entry in DUDEWHERE for the CAR for the root `bafyDAGRootCID`.
+Build a CAR index in SATNAV for `:car-cid` and add an entry in DUDEWHERE for the CAR for the root `:root-cid`.
 
 Example:
 
@@ -53,9 +53,9 @@ Response:
 }
 ```
 
-### `POST /links/bafyBlockCID`
+### `POST /links/:cid`
 
-Obtain CIDs for links of `bafyBlockCID`.
+Obtain CIDs for links of `:cid`.
 
 Example:
 
@@ -85,7 +85,7 @@ Response:
 }
 ```
 
-### `HEAD /block/bafyBlockCID`
+### `HEAD /block/:cid`
 
 Determine if a block index exists already for a given CID. Returns 404 status if not exists and 200 otherwise.
 
@@ -95,9 +95,9 @@ Example:
 curl -X HEAD https://gendex.worker/block/bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdojfrl7ibrpi3mzaws3b4
 ```
 
-### `PUT /block/bafyBlockCID`
+### `PUT /block/:cid`
 
-Put a block index for `bafyBlockCID`.
+Put a block index for `:cid`.
 
 The request body should be a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) with the index information for the block AND it's links.
 
@@ -136,9 +136,9 @@ It returns an ndjson response, a list of blocks the block links to and the CIDs 
 
 If an error occurs mid stream, an object with an `error: string` property is output.
 
-### `GET /index/bafyDAGRootCID`
+### `GET /index/:cid`
 
-Get a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) containing block CAR and offset information for the entire DAG routed at `bafyDAGRootCID`.
+Get a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) containing block CAR and offset information for the entire DAG routed at `:cid`.
 
 Example:
 
