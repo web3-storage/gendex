@@ -7,7 +7,7 @@ import * as raw from 'multiformats/codecs/raw'
 import { equals } from 'multiformats/bytes'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
-import { putShardIndex, getBlockIndex, getBlockLinks, putBlockIndex } from './helpers.js'
+import { putShardIndex, getBlockIndex, getBlockLinks, putBlockIndex, hasBlockIndex } from './helpers.js'
 
 const endpoint = new URL('http://localhost:8787')
 const fixtures = {
@@ -90,7 +90,9 @@ describe('gendex', () => {
     while (true) {
       const item = queue.shift()
       if (!item) break
+      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), false)
       const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
+      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), true)
       queue.push(...links)
     }
 

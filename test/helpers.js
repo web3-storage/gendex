@@ -40,7 +40,7 @@ export async function putShardIndex (endpoint, http, root, shard) {
  */
 export async function putBlockIndex (endpoint, http, blockIndex, cid, links) {
   const res = await http.dispatchFetch(new URL(`/block/${cid}`, endpoint).toString(), {
-    method: 'POST',
+    method: 'PUT',
     // @ts-expect-error
     body: writeMultiIndex(blockIndex, [cid, ...links]),
     duplex: 'half'
@@ -62,6 +62,20 @@ export async function putBlockIndex (endpoint, http, blockIndex, cid, links) {
   )
   assert(cid.equals(results.at(-1)?.cid))
   return results.slice(0, -1)
+}
+
+/**
+ * Determine if a block index exists.
+ * @param {URL} endpoint
+ * @param {Dispatcher} http
+ * @param {import('multiformats').UnknownLink} cid
+ */
+export async function hasBlockIndex (endpoint, http, cid) {
+  const url = new URL(`/block/${cid}`, endpoint).toString()
+  const res = await http.dispatchFetch(url, { method: 'HEAD' })
+  if (res.status === 200) return true
+  if (res.status === 404) return false
+  throw new Error(`unexpected block index response status: ${res.status}`)
 }
 
 /**

@@ -2,11 +2,11 @@
 import * as Link from 'multiformats/link'
 import * as json from '@ipld/dag-json'
 import * as dagpb from '@ipld/dag-pb'
-import { UnixFS } from 'ipfs-unixfs'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { getBlock } from '../lib/r2-block.js'
 import { mhToString } from '../lib/multihash.js'
 import { ErrorResponse } from '../lib/errors.js'
+import { getUnixFsMeta } from '../lib/unixfs.js'
 
 export default {
   /**
@@ -40,9 +40,7 @@ export default {
     const block = await getBlock(env.CARPARK, indexItem.origin.toString(), indexItem.offset)
     const blockLinks = [...block.links()].map(([, cid]) => cid)
 
-    const meta = block.cid.code === dagpb.code
-      ? { type: UnixFS.unmarshal(block.value.Data).type }
-      : {}
+    const meta = block.cid.code === dagpb.code ? getUnixFsMeta(block.value.Data) : {}
 
     return new Response(
       json.encode({ cid: blockCID, links: blockLinks, meta }),

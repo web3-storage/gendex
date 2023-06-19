@@ -9,12 +9,12 @@ import { MultiIndexWriter, MultiIndexReader } from 'cardex/multi-index'
 import { transform } from 'streaming-iterables'
 import * as json from '@ipld/dag-json'
 import * as dagpb from '@ipld/dag-pb'
-import { UnixFS } from 'ipfs-unixfs'
 import { getBlock } from '../lib/r2-block.js'
 import { mhToString } from '../lib/multihash.js'
 import { iteratorToStream, streamToBlob } from '../lib/stream.js'
 import { getAnyMapEntry } from '../lib/map.js'
 import { ErrorResponse } from '../lib/errors.js'
+import { getUnixFsMeta } from '../lib/unixfs.js'
 
 const CONCURRENCY = 20
 
@@ -30,6 +30,10 @@ export default {
     const blockCID = Link.parse(pathParts[2])
     /** @type {import('../bindings').MultihashString} */
     const blockMh = mhToString(blockCID.multihash)
+    if (request.method === 'HEAD') {
+      const found = await env.BLOCKLY.head(`${blockMh}/${blockMh}.idx`)
+      return new Response(null, { status: found ? 200 : 404 })
+    }
 
     if (!request.body) return new ErrorResponse('missing index data', 400)
     const indexReader = MultiIndexReader.createReader({ reader: request.body.getReader() })
@@ -125,15 +129,6 @@ export default {
         throw err
       }
     })()), { headers: { 'Content-Type': 'application/x-ndjson' } })
-  }
-}
-
-/** @param {Uint8Array} data */
-function getUnixFsMeta (data) {
-  try {
-    return { type: UnixFS.unmarshal(data).type }
-  } catch {
-    return {}
   }
 }
 

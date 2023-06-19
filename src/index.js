@@ -8,9 +8,14 @@ const Handlers = {
   GET: {
     '/index/': index
   },
+  PUT: {
+    '/block/': block
+  },
+  HEAD: {
+    '/block/': block
+  },
   POST: {
     '/shard/': shard,
-    '/block/': block,
     '/links/': links
   }
 }
