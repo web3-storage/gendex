@@ -1,5 +1,6 @@
 /* eslint-env browser */
 import * as Link from 'multiformats/link'
+import { sha256 } from 'multiformats/hashes/sha2'
 import { mhToString } from '../lib/multihash.js'
 import { ErrorResponse } from '../lib/errors.js'
 import { readMultiIndex } from '../lib/multi-index.js'
@@ -8,30 +9,39 @@ export default {
   /**
    * @param {Request} request
    * @param {import('../bindings').Env} env
-   * @param {unknown} ctx
    */
-  async fetch (request, env, ctx) {
+  async fetch (request, env) {
     const reqURL = new URL(request.url)
     const pathParts = reqURL.pathname.split('/')
     const blockCID = Link.parse(pathParts[2])
     /** @type {import('../bindings').MultihashString} */
-    const blockMh = mhToString(blockCID.multihash)
+    const blockMhStr = mhToString(blockCID.multihash)
+
+    const headObj = await env.BLOCKLY.head(`${blockMhStr}/.idx`)
     if (request.method === 'HEAD') {
-      const found = await env.BLOCKLY.head(`${blockMh}/${blockMh}.idx`)
-      return new Response(null, { status: found ? 200 : 404 })
+      return new Response(null, { status: headObj ? 200 : 404 })
     }
 
-    const indexData = await request.blob()
+    const indexBytes = new Uint8Array(await request.arrayBuffer())
 
     // Read the index to verify it's complete and formatted correctly
-    const blockIndex = await readMultiIndex(indexData.stream())
+    const blockIndex = await readMultiIndex(new Blob([indexBytes]).stream())
     if (!blockIndex.has(blockCID)) {
       return new ErrorResponse(`missing index data for block: ${blockCID}`, 400)
     }
     // TODO: verify linked blocks?
 
-    // @ts-expect-error
-    await env.BLOCKLY.put(`${blockMh}/${blockMh}.idx`, indexData)
+    const indexMh = await sha256.digest(indexBytes)
+    const indexMhStr = mhToString(indexMh)
+    await Promise.all([
+      (async () => {
+        if (!(await env.BLOCKLY.head(`${blockMhStr}/${indexMhStr}.idx`))) {
+          await env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes)
+        }
+      })(),
+      headObj ? Promise.resolve() : env.BLOCKLY.put(`${blockMhStr}/.idx`, indexMh.bytes)
+    ])
+
     return new Response()
   }
 }

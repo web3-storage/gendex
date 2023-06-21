@@ -5,6 +5,8 @@ import fs from 'node:fs'
 import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { equals } from 'multiformats/bytes'
+import * as Digest from 'multiformats/hashes/digest'
+import { sha256 } from 'multiformats/hashes/sha2'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
 import { putShardIndex, getIndex, getBlockLinks, putBlockIndex, hasBlockIndex } from './helpers.js'
@@ -104,18 +106,22 @@ describe('gendex', () => {
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
     const mhashes = [fixtures.single.root.multihash]
     while (true) {
-      const mh = mhashes.shift()
-      if (!mh) break
+      const blockMh = mhashes.shift()
+      if (!blockMh) break
 
-      const res = await blockly.get(`${mhToString(mh)}/${mhToString(mh)}.idx`)
-      assert(res, `missing index: ${mhToString(mh)}`)
+      const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
+      assert(indexRes)
+
+      const indexMh = Digest.decode(new Uint8Array(await indexRes.arrayBuffer()))
+      const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
+      assert(res, `missing index: ${mhToString(blockMh)}`)
 
       const reader = MultiIndexReader.createReader({ reader: res.body.getReader() })
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         // @ts-expect-error
-        if (!equals(value.multihash.bytes, mh.bytes)) {
+        if (!equals(value.multihash.bytes, blockMh.bytes)) {
           // @ts-expect-error
           console.log(`  ${value.origin}: ${Link.create(raw.code, value.multihash).toString()} @ ${value.offset}`)
           // @ts-expect-error
@@ -157,18 +163,22 @@ describe('gendex', () => {
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
     const mhashes = [fixtures.multi.root.multihash]
     while (true) {
-      const mh = mhashes.shift()
-      if (!mh) break
+      const blockMh = mhashes.shift()
+      if (!blockMh) break
 
-      const res = await blockly.get(`${mhToString(mh)}/${mhToString(mh)}.idx`)
-      assert(res, `missing index: ${mhToString(mh)}`)
+      const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
+      assert(indexRes)
+
+      const indexMh = Digest.decode(new Uint8Array(await indexRes.arrayBuffer()))
+      const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
+      assert(res, `missing index: ${mhToString(blockMh)}`)
 
       const reader = MultiIndexReader.createReader({ reader: res.body.getReader() })
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
         // @ts-expect-error
-        if (!equals(value.multihash.bytes, mh.bytes)) {
+        if (!equals(value.multihash.bytes, blockMh.bytes)) {
           // @ts-expect-error
           console.log(`  ${value.origin}: ${Link.create(raw.code, value.multihash).toString()} @ ${value.offset}`)
           // @ts-expect-error
