@@ -13,7 +13,7 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 * [`POST /links/:cid`](#post-linkscid) - Get block links.
 * [`HEAD /block/:cid`](#head-blockcid) - Determine if block index exists.
 * [`PUT /block/:cid`](#put-blockcid) - Put a block index.
-* [`GET /index/:cid`](#get-indexcid) - Get index for DAG.
+* [`POST /index`](#post-index) - Get multi-index for CAR shards in request body.
 
 ### `POST /shard/:root-cid/:car-cid`
 
@@ -66,23 +66,17 @@ curl -X POST https://gendex.worker/links/bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpd
 Response:
 
 ```json
-{
-  "cid": {
-    "/": "bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdojfrl7ibrpi3mzaws3b4"
+[
+  {
+    "/": "bafkreiaujy7eipaqouojrzg44gxzmclhip7wdx4jcdlc2gjkxex3qmtuoe"
   },
-  "links": [
-    {
-      "/": "bafkreiaujy7eipaqouojrzg44gxzmclhip7wdx4jcdlc2gjkxex3qmtuoe"
-    },
-    {
-      "/": "bafkreihhvnnlp6bnnfnh7todbiovk5e2x2qdk3xl4lldlkwbspmjnzkxj4"
-    },
-    {
-      "/": "bafkreicppa4bymzulkqm5b5xnru67y5e6osv2rmnqef3ncyolw7i6cm4f4"
-    }
-  ],
-  "meta": { "type": "file" }
-}
+  {
+    "/": "bafkreihhvnnlp6bnnfnh7todbiovk5e2x2qdk3xl4lldlkwbspmjnzkxj4"
+  },
+  {
+    "/": "bafkreicppa4bymzulkqm5b5xnru67y5e6osv2rmnqef3ncyolw7i6cm4f4"
+  }
+]
 ```
 
 ### `HEAD /block/:cid`
@@ -110,40 +104,15 @@ curl -X PUT https://gendex.worker/block/bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdo
 # TODO: example needs body data
 ```
 
-It returns an ndjson response, a list of blocks the block links to and the CIDs of _their_ links. The last item output is always the indexed block itself.
+### `POST /index`
 
-```json
-{
-  "cid": {
-    "/": "bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdojfrl7ibrpi3mzaws3b4"
-  },
-  "links": [
-    {
-      "/": "bafkreiaujy7eipaqouojrzg44gxzmclhip7wdx4jcdlc2gjkxex3qmtuoe"
-    },
-    {
-      "/": "bafkreihhvnnlp6bnnfnh7todbiovk5e2x2qdk3xl4lldlkwbspmjnzkxj4"
-    },
-    {
-      "/": "bafkreicppa4bymzulkqm5b5xnru67y5e6osv2rmnqef3ncyolw7i6cm4f4"
-    }
-  ],
-  "meta": { "type": "file" }
-}
-\n
-// ...
-```
-
-If an error occurs mid stream, an object with an `error: string` property is output.
-
-### `GET /index/:cid`
-
-Get a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) containing block CAR and offset information for the entire DAG routed at `:cid`.
+Get a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) containing block CAR and offset information for shards passed in the request body.
 
 Example:
 
 ```sh
-curl https://gendex.worker/index/bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdojfrl7ibrpi3mzaws3b4
+curl -X POST https://gendex.worker/index
+# TODO: example needs body data
 ```
 
 ## Contributing

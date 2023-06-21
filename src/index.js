@@ -5,9 +5,6 @@ import index from './handlers/index.js'
 import links from './handlers/links.js'
 
 const Handlers = {
-  GET: {
-    '/index/': index
-  },
   PUT: {
     '/block/': block
   },
@@ -15,6 +12,7 @@ const Handlers = {
     '/block/': block
   },
   POST: {
+    '/index': index,
     '/shard/': shard,
     '/links/': links
   }

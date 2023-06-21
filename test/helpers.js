@@ -1,17 +1,12 @@
 /* eslint-env mocha, browser */
 import assert from 'node:assert'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import ndjson from 'ndjson'
-import * as Link from 'multiformats/link'
-import * as raw from 'multiformats/codecs/raw'
-import * as Digest from 'multiformats/hashes/digest'
-import { base58btc } from 'multiformats/bases/base58'
-import { MultiIndexReader, MultiIndexWriter } from 'cardex/multi-index'
+import { MultiIndexWriter } from 'cardex/multi-index'
 import { MultihashIndexSortedWriter } from 'cardex/multihash-index-sorted'
 import * as json from '@ipld/dag-json'
-import { mhToString } from '../src/lib/multihash.js'
+import { Map as LinkMap } from 'lnmap'
+import * as Link from 'multiformats/link'
 import { getAnyMapEntry } from '../src/lib/map.js'
+import { readMultiIndex } from '../src/lib/multi-index.js'
 
 /**
  * @typedef {{ dispatchFetch (input: RequestInfo, init?: RequestInit): Promise<Response> }} Dispatcher
@@ -31,7 +26,7 @@ export async function putShardIndex (endpoint, http, root, shard) {
 }
 
 /**
- * Write an index for the provided shard in SATNAV and add DUDEWHERE link.
+ * Write an index for the provided block.
  * @param {URL} endpoint
  * @param {Dispatcher} http
  * @param {import('../src/bindings').BlockIndex} blockIndex
@@ -42,26 +37,9 @@ export async function putBlockIndex (endpoint, http, blockIndex, cid, links) {
   const res = await http.dispatchFetch(new URL(`/block/${cid}`, endpoint).toString(), {
     method: 'PUT',
     // @ts-expect-error
-    body: writeMultiIndex(blockIndex, [cid, ...links]),
-    duplex: 'half'
+    body: writeMultiIndex(blockIndex, [cid, ...links])
   })
   assert.equal(res.status, 200)
-  assert(res.body)
-
-  /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[], meta: any }>} */
-  const results = []
-  await pipeline(
-    // @ts-expect-error
-    Readable.fromWeb(res.body),
-    ndjson.parse(),
-    async function (source) {
-      for await (const item of source) {
-        results.push(json.parse(JSON.stringify(item)))
-      }
-    }
-  )
-  assert(cid.equals(results.at(-1)?.cid))
-  return results.slice(0, -1)
 }
 
 /**
@@ -79,17 +57,19 @@ export async function hasBlockIndex (endpoint, http, cid) {
 }
 
 /**
- * Get a block index of the entire DAG.
+ * Get block indexs of the passed shards.
  * @param {URL} endpoint
  * @param {Dispatcher} http
- * @param {import('multiformats').UnknownLink} root
- * @param {number} [max] Maximum allowed blocks to read (throws if exceeded).
+ * @param {import('cardex/api').CARLink[]} shards
  */
-export async function getBlockIndex (endpoint, http, root, max) {
-  const res = await http.dispatchFetch(new URL(`/index/${root}`, endpoint).toString())
+export async function getIndex (endpoint, http, shards) {
+  const res = await http.dispatchFetch(new URL('/index', endpoint).toString(), {
+    method: 'POST',
+    body: json.encode(shards)
+  })
   assert.equal(res.status, 200)
   assert(res.body)
-  return readMultiIndex(res.body, max)
+  return readMultiIndex(res.body)
 }
 
 /**
@@ -98,14 +78,13 @@ export async function getBlockIndex (endpoint, http, root, max) {
  * @param {Dispatcher} http
  * @param {import('../src/bindings').BlockIndex} blockIndex
  * @param {import('multiformats').UnknownLink} cid
- * @returns {Promise<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[], meta: any }>}
+ * @returns {Promise<import('multiformats').UnknownLink[]>}
  */
 export async function getBlockLinks (endpoint, http, blockIndex, cid) {
   const res = await http.dispatchFetch(new URL(`/links/${cid}`, endpoint).toString(), {
     method: 'POST',
     // @ts-expect-error
-    body: writeMultiIndex(blockIndex, [cid]),
-    duplex: 'half'
+    body: writeMultiIndex(blockIndex, [cid])
   })
   assert.equal(res.status, 200)
   return json.decode(new Uint8Array(await res.arrayBuffer()))
@@ -118,29 +97,29 @@ export async function getBlockLinks (endpoint, http, blockIndex, cid) {
  */
 export function writeMultiIndex (blockIndex, blocks) {
   /** @type {import('../src/bindings').ShardIndex} */
-  const shardIndex = new Map()
+  const shardIndex = new LinkMap()
   for (const blockCID of blocks) {
-    const blockMh = mhToString(blockCID.multihash)
-    const offsets = blockIndex.get(blockMh)
+    const offsets = blockIndex.get(blockCID)
     if (!offsets) throw new Error(`block not indexed: ${blockCID}`)
     const [shard, offset] = getAnyMapEntry(offsets)
     let blocks = shardIndex.get(shard)
     if (!blocks) {
-      blocks = new Map()
+      blocks = new LinkMap()
       shardIndex.set(shard, blocks)
     }
-    blocks.set(blockMh, offset)
+    blocks.set(blockCID, offset)
   }
 
   const { readable, writable } = new TransformStream()
   const writer = MultiIndexWriter.createWriter({ writer: writable.getWriter() })
 
   for (const [shard, blocks] of shardIndex.entries()) {
-    writer.add(Link.parse(shard), async ({ writer }) => {
+    // @ts-expect-error we have to make a copy here because miniflare
+    writer.add(Link.parse(shard.toString()), async ({ writer }) => {
       const index = MultihashIndexSortedWriter.createWriter({ writer })
-      for (const [blockMh, offset] of blocks.entries()) {
-        const cid = Link.create(raw.code, Digest.decode(base58btc.decode(blockMh)))
-        index.add(cid, offset)
+      for (const [block, offset] of blocks.entries()) {
+        // we have to make a copy here because miniflare
+        index.add(Link.parse(block.toString()), offset)
       }
       await index.close()
     })
@@ -148,32 +127,4 @@ export function writeMultiIndex (blockIndex, blocks) {
 
   writer.close()
   return readable
-}
-
-/**
- * @param {import('cardex/reader/api').Readable} readable
- * @param {number} [max] Maximum allowed blocks to read (throws if exceeded).
- */
-export async function readMultiIndex (readable, max = Infinity) {
-  /** @type {import('../src/bindings').BlockIndex} */
-  const blockIndex = new Map()
-  const reader = MultiIndexReader.createReader({ reader: readable.getReader() })
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    if (!('multihash' in value)) throw new Error('not MultihashIndexSorted')
-    const item = /** @type {import('cardex/multi-index/api').MultiIndexItem & import('cardex/mh-index-sorted/api').MultihashIndexItem} */ (value)
-    const blockMh = mhToString(item.multihash)
-    let shards = blockIndex.get(blockMh)
-    if (!shards) {
-      shards = new Map()
-      blockIndex.set(blockMh, shards)
-      if (blockIndex.size > max) {
-        reader.cancel()
-        throw new RangeError(`maximum index size exceeded (${max} blocks)`)
-      }
-    }
-    shards.set(`${item.origin}`, item.offset)
-  }
-  return blockIndex
 }

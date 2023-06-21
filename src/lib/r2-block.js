@@ -34,13 +34,13 @@ const MAX_ENCODED_BLOCK_LENGTH = (1024 * 1024 * 2) + 39 + 61
 
 /**
  * @param {import('@cloudflare/workers-types').R2Bucket} bucket
- * @param {string} shardCID
+ * @param {import('cardex/api').CARLink} shard
  * @param {number} offset
  */
-export async function getBlock (bucket, shardCID, offset) {
+export async function getBlock (bucket, shard, offset) {
   const range = { offset, length: MAX_ENCODED_BLOCK_LENGTH }
-  const res = await bucket.get(`${shardCID}/${shardCID}.car`, { range })
-  if (!res) throw Object.assign(new Error(`missing shard: ${shardCID}`), { code: 'ERR_MISSING_SHARD' })
+  const res = await bucket.get(`${shard}/${shard}.car`, { range })
+  if (!res) throw Object.assign(new Error(`missing shard: ${shard}`), { code: 'ERR_MISSING_SHARD' })
 
   const reader = res.body.getReader()
   const bytesReader = asyncIterableReader((async function * () {

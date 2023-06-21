@@ -1,7 +1,8 @@
 import type { R2Bucket, ServiceWorkerGlobalScope } from '@cloudflare/workers-types'
+import type { ToString } from 'multiformats'
 import type { BlockDecoder } from 'multiformats/codecs/interface'
-import type { MultihashDigest, MultihashHasher } from 'multiformats/hashes/interface'
-import type { ToString } from 'multiformats/link'
+import type { UnknownLink } from 'multiformats/link'
+import type { MultihashHasher, MultihashDigest } from 'multiformats/hashes/interface'
 import type { CARLink } from 'cardex/api'
 
 export interface Env {
@@ -30,8 +31,7 @@ export interface IndexSource {
 }
 
 export type MultihashString = ToString<MultihashDigest, 'z'>
-export type ShardCIDString = ToString<CARLink, 'b'>
 export type Offset = number
 
-export interface BlockIndex extends Map<MultihashString, Map<ShardCIDString, Offset>> {}
-export interface ShardIndex extends Map<ShardCIDString, Map<MultihashString, Offset>> {}
+export interface BlockIndex extends Map<UnknownLink, Map<CARLink, Offset>> {}
+export interface ShardIndex extends Map<CARLink, Map<UnknownLink, Offset>> {}

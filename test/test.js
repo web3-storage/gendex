@@ -7,7 +7,7 @@ import * as raw from 'multiformats/codecs/raw'
 import { equals } from 'multiformats/bytes'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
-import { putShardIndex, getBlockIndex, getBlockLinks, putBlockIndex, hasBlockIndex } from './helpers.js'
+import { putShardIndex, getIndex, getBlockLinks, putBlockIndex, hasBlockIndex } from './helpers.js'
 
 const endpoint = new URL('http://localhost:8787')
 const fixtures = {
@@ -82,18 +82,23 @@ describe('gendex', () => {
 
     await putShardIndex(endpoint, dispatcher, fixtures.single.root, fixtures.single.shards[0])
 
-    const blockIndex = await getBlockIndex(endpoint, dispatcher, fixtures.single.root)
-    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.single.root)
+    const blockIndex = await getIndex(endpoint, dispatcher, fixtures.single.shards)
+    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.single.root)
 
     /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
     const queue = [{ cid: fixtures.single.root, links: rootLinks }]
     while (true) {
       const item = queue.shift()
       if (!item) break
+
       assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), false)
-      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
+      await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
       assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), true)
-      queue.push(...links)
+
+      for (const cid of item.links) {
+        const links = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
+        queue.push({ cid, links })
+      }
     }
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
@@ -130,16 +135,23 @@ describe('gendex', () => {
       await putShardIndex(endpoint, dispatcher, fixtures.multi.root, shard)
     }
 
-    const blockIndex = await getBlockIndex(endpoint, dispatcher, fixtures.multi.root)
-    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.multi.root)
+    const blockIndex = await getIndex(endpoint, dispatcher, fixtures.multi.shards)
+    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.multi.root)
 
     /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
     const queue = [{ cid: fixtures.multi.root, links: rootLinks }]
     while (true) {
       const item = queue.shift()
       if (!item) break
-      const links = await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
-      queue.push(...links)
+
+      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), false)
+      await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
+      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), true)
+
+      for (const cid of item.links) {
+        const links = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
+        queue.push({ cid, links })
+      }
     }
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
