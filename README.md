@@ -84,7 +84,11 @@ Put a block index for `:cid`.
 
 The request body should be a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) with the index information for the block AND it's links.
 
+The index is written to `<base58(block-multihash)>/<base58(index-multihash)>.idx`
+
 Note: block indexes are keyed by base58btc multibase encoded multihash. They are [multi-index indexes](https://github.com/alanshaw/cardex#multi-index-index) that index the block _as well as_ it's links.
+
+A "symlink" is written to `<base58(block-multihash)>/.idx`. The file contains the multihash of an index for the block.
 
 Example:
 
