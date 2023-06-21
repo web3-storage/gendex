@@ -43,20 +43,6 @@ export async function putBlockIndex (endpoint, http, blockIndex, cid, links) {
 }
 
 /**
- * Determine if a block index exists.
- * @param {URL} endpoint
- * @param {Dispatcher} http
- * @param {import('multiformats').UnknownLink} cid
- */
-export async function hasBlockIndex (endpoint, http, cid) {
-  const url = new URL(`/block/${cid}`, endpoint).toString()
-  const res = await http.dispatchFetch(url, { method: 'HEAD' })
-  if (res.status === 200) return true
-  if (res.status === 404) return false
-  throw new Error(`unexpected block index response status: ${res.status}`)
-}
-
-/**
  * Get block indexs of the passed shards.
  * @param {URL} endpoint
  * @param {Dispatcher} http

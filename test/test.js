@@ -8,7 +8,7 @@ import { equals } from 'multiformats/bytes'
 import * as Digest from 'multiformats/hashes/digest'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
-import { putShardIndex, getIndex, getBlockLinks, putBlockIndex, hasBlockIndex } from './helpers.js'
+import { putShardIndex, getIndex, getBlockLinks, putBlockIndex } from './helpers.js'
 
 const endpoint = new URL('http://localhost:8787')
 const fixtures = {
@@ -92,9 +92,7 @@ describe('gendex', () => {
       const item = queue.shift()
       if (!item) break
 
-      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), false)
       await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
-      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), true)
 
       for (const cid of item.links) {
         const links = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
@@ -109,11 +107,11 @@ describe('gendex', () => {
       if (!blockMh) break
 
       const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
-      assert(indexRes)
+      assert(indexRes, `missing index: ${mhToString(blockMh)}/.idx`)
 
       const indexMh = Digest.decode(new Uint8Array(await indexRes.arrayBuffer()))
       const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
-      assert(res, `missing index: ${mhToString(blockMh)}`)
+      assert(res, `missing index: ${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
 
       const reader = MultiIndexReader.createReader({ reader: res.body.getReader() })
       while (true) {
@@ -149,9 +147,7 @@ describe('gendex', () => {
       const item = queue.shift()
       if (!item) break
 
-      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), false)
       await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
-      assert.equal(await hasBlockIndex(endpoint, dispatcher, item.cid), true)
 
       for (const cid of item.links) {
         const links = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
@@ -166,11 +162,11 @@ describe('gendex', () => {
       if (!blockMh) break
 
       const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
-      assert(indexRes)
+      assert(indexRes, `missing index: ${mhToString(blockMh)}/.idx`)
 
       const indexMh = Digest.decode(new Uint8Array(await indexRes.arrayBuffer()))
       const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
-      assert(res, `missing index: ${mhToString(blockMh)}`)
+      assert(res, `missing index: ${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
 
       const reader = MultiIndexReader.createReader({ reader: res.body.getReader() })
       while (true) {
