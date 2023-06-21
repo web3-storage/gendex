@@ -11,7 +11,6 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 
 * [`POST /shard/:root-cid/:car-cid`](#post-shardroot-cidcar-cid) - Build a CAR index.
 * [`POST /links/:cid`](#post-linkscid) - Get block links.
-* [`HEAD /block/:cid`](#head-blockcid) - Determine if block index exists.
 * [`PUT /block/:cid`](#put-blockcid) - Put a block index.
 * [`POST /index`](#post-index) - Get multi-index for CAR shards in request body.
 
@@ -77,16 +76,6 @@ Response:
     "/": "bafkreicppa4bymzulkqm5b5xnru67y5e6osv2rmnqef3ncyolw7i6cm4f4"
   }
 ]
-```
-
-### `HEAD /block/:cid`
-
-Determine if a block index exists already for a given CID. Returns 404 status if not exists and 200 otherwise.
-
-Example:
-
-```sh
-curl -X HEAD https://gendex.worker/block/bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdojfrl7ibrpi3mzaws3b4
 ```
 
 ### `PUT /block/:cid`
