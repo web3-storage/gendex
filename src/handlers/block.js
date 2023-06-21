@@ -14,14 +14,6 @@ export default {
     const reqURL = new URL(request.url)
     const pathParts = reqURL.pathname.split('/')
     const blockCID = Link.parse(pathParts[2])
-    /** @type {import('../bindings').MultihashString} */
-    const blockMhStr = mhToString(blockCID.multihash)
-
-    const headObj = await env.BLOCKLY.head(`${blockMhStr}/.idx`)
-    if (request.method === 'HEAD') {
-      return new Response(null, { status: headObj ? 200 : 404 })
-    }
-
     const indexBytes = new Uint8Array(await request.arrayBuffer())
 
     // Read the index to verify it's complete and formatted correctly
@@ -31,6 +23,7 @@ export default {
     }
     // TODO: verify linked blocks?
 
+    const blockMhStr = mhToString(blockCID.multihash)
     const indexMh = await sha256.digest(indexBytes)
     const indexMhStr = mhToString(indexMh)
     await Promise.all([
@@ -39,7 +32,11 @@ export default {
           await env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes)
         }
       })(),
-      headObj ? Promise.resolve() : env.BLOCKLY.put(`${blockMhStr}/.idx`, indexMh.bytes)
+      (async () => {
+        if (!(await env.BLOCKLY.head(`${blockMhStr}/.idx`))) {
+          await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexMh.bytes)
+        }
+      })()
     ])
 
     return new Response()
