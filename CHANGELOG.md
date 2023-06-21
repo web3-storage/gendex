@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/web3-storage/gendex/compare/v2.0.0...v2.1.0) (2023-06-19)
+
+
+### Features
+
+* allow HEAD request to /block route ([2fc79a9](https://github.com/web3-storage/gendex/commit/2fc79a9a27ae16df399fc95b75ce7eb91ccf0069))
+
+
+### Bug Fixes
+
+* guarded unixfs decode for meta ([727d794](https://github.com/web3-storage/gendex/commit/727d7944e773200ac0e223675b2e0a6d185a550c))
+
 ## [2.0.0](https://github.com/web3-storage/gendex/compare/v1.3.0...v2.0.0) (2023-06-16)
 
 
