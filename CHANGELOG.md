@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.0.0](https://github.com/web3-storage/gendex/compare/v3.0.0...v4.0.0) (2023-06-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* write index to well known
+
+### Code Refactoring
+
+* write index to well known ([b80bb99](https://github.com/web3-storage/gendex/commit/b80bb99fb5e17a73616db9833154ab03bcbdeba2))
+
 ## [3.0.0](https://github.com/web3-storage/gendex/compare/v2.1.0...v3.0.0) (2023-06-21)
 
 
