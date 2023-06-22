@@ -10,9 +10,9 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 ## Usage
 
 * [`POST /shard/:root-cid/:car-cid`](#post-shardroot-cidcar-cid) - Build a CAR index.
+* [`POST /index`](#post-index) - Get multi-index for CAR shards in request body.
 * [`POST /links/:cid`](#post-linkscid) - Get block links.
 * [`PUT /block/:cid`](#put-blockcid) - Put a block index.
-* [`POST /index`](#post-index) - Get multi-index for CAR shards in request body.
 
 ### `POST /shard/:root-cid/:car-cid`
 
@@ -50,6 +50,17 @@ Response:
     "/": "bafybeia7yvvioltmupfxvkcfef75htxqbyylpot5ddxuzla5zaokjyrvfu"
   }
 }
+```
+
+### `POST /index`
+
+Get a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) containing block CAR and offset information for shards passed in the request body.
+
+Example:
+
+```sh
+curl -X POST https://gendex.worker/index
+# TODO: example needs body data
 ```
 
 ### `POST /links/:cid`
@@ -94,17 +105,6 @@ Example:
 
 ```sh
 curl -X PUT https://gendex.worker/block/bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdojfrl7ibrpi3mzaws3b4
-# TODO: example needs body data
-```
-
-### `POST /index`
-
-Get a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) containing block CAR and offset information for shards passed in the request body.
-
-Example:
-
-```sh
-curl -X POST https://gendex.worker/index
 # TODO: example needs body data
 ```
 
