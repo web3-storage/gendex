@@ -6,6 +6,7 @@ import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { equals } from 'multiformats/bytes'
 import * as Digest from 'multiformats/hashes/digest'
+import { sha256 } from 'multiformats/hashes/sha2'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
 import { putShardIndex, getIndex, getBlockLinks, putBlockIndex } from './helpers.js'
@@ -108,8 +109,8 @@ describe('gendex', () => {
 
       const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
       assert(indexRes, `missing index: ${mhToString(blockMh)}/.idx`)
+      const indexMh = await sha256.digest(new Uint8Array(await indexRes.arrayBuffer()))
 
-      const indexMh = Digest.decode(new Uint8Array(await indexRes.arrayBuffer()))
       const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
       assert(res, `missing index: ${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
 
@@ -163,8 +164,8 @@ describe('gendex', () => {
 
       const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
       assert(indexRes, `missing index: ${mhToString(blockMh)}/.idx`)
+      const indexMh = await sha256.digest(new Uint8Array(await indexRes.arrayBuffer()))
 
-      const indexMh = Digest.decode(new Uint8Array(await indexRes.arrayBuffer()))
       const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
       assert(res, `missing index: ${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
 

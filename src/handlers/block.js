@@ -34,7 +34,7 @@ export default {
       })(),
       (async () => {
         if (!(await env.BLOCKLY.head(`${blockMhStr}/.idx`))) {
-          await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexMh.bytes)
+          await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexBytes)
         }
       })()
     ])
