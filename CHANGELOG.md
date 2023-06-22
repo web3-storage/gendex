@@ -1,5 +1,22 @@
 # Changelog
 
+## [3.0.0](https://github.com/web3-storage/gendex/compare/v2.1.0...v3.0.0) (2023-06-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* revised API
+
+### Features
+
+* revised API ([358c588](https://github.com/web3-storage/gendex/commit/358c58882fbed4cc1329cb1277fda036cf438af2))
+
+
+### Bug Fixes
+
+* remove old doc ([3e0d8f1](https://github.com/web3-storage/gendex/commit/3e0d8f1ee6b740f6dcad7583fb8bb3353b48faf5))
+* tests ([b1b9ce4](https://github.com/web3-storage/gendex/commit/b1b9ce4fe64ca4136533026b046bdaec37556649))
+
 ## [2.1.0](https://github.com/web3-storage/gendex/compare/v2.0.0...v2.1.0) (2023-06-19)
 
 
