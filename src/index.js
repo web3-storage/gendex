@@ -22,7 +22,7 @@ export default {
   /**
    * @param {Request} request
    * @param {import('./bindings').Env} env
-   * @param {unknown} ctx
+   * @param {import('@cloudflare/workers-types').ExecutionContext} ctx
    */
   async fetch (request, env, ctx) {
     try {
