@@ -84,7 +84,7 @@ describe('gendex', () => {
     await putShardIndex(endpoint, dispatcher, fixtures.single.root, fixtures.single.shards[0])
 
     const blockIndex = await getIndex(endpoint, dispatcher, fixtures.single.shards)
-    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.single.root)
+    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.single.root)
 
     /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
     const queue = [{ cid: fixtures.single.root, links: rootLinks }]
@@ -95,7 +95,7 @@ describe('gendex', () => {
       await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
 
       for (const cid of item.links) {
-        const links = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
+        const { links } = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
         queue.push({ cid, links })
       }
     }
@@ -139,7 +139,7 @@ describe('gendex', () => {
     }
 
     const blockIndex = await getIndex(endpoint, dispatcher, fixtures.multi.shards)
-    const rootLinks = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.multi.root)
+    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.multi.root)
 
     /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
     const queue = [{ cid: fixtures.multi.root, links: rootLinks }]
@@ -150,7 +150,7 @@ describe('gendex', () => {
       await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
 
       for (const cid of item.links) {
-        const links = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
+        const { links } = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
         queue.push({ cid, links })
       }
     }

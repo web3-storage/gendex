@@ -5,6 +5,7 @@ import { getBlock } from '../lib/r2-block.js'
 import { ErrorResponse } from '../lib/errors.js'
 import { readMultiIndex } from '../lib/multi-index.js'
 import { getAnyMapEntry } from '../lib/map.js'
+import { getUnixFsMeta } from '../lib/unixfs.js'
 
 export default {
   /**
@@ -24,10 +25,10 @@ export default {
 
     const [shard, offset] = getAnyMapEntry(offsets)
     const block = await getBlock(env.CARPARK, shard, offset)
-    const blockLinks = [...block.links()].map(([, cid]) => cid)
+    const links = [...block.links()].map(([, cid]) => cid)
 
     return new Response(
-      json.encode(blockLinks),
+      json.encode({ block: blockCID, links, meta: getUnixFsMeta(block.value.Data) }),
       { headers: { 'Content-Type': 'application/json' } }
     )
   }

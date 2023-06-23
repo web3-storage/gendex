@@ -64,7 +64,7 @@ export async function getIndex (endpoint, http, shards) {
  * @param {Dispatcher} http
  * @param {import('../src/bindings').BlockIndex} blockIndex
  * @param {import('multiformats').UnknownLink} cid
- * @returns {Promise<import('multiformats').UnknownLink[]>}
+ * @returns {Promise<{ links: import('multiformats').UnknownLink[] }>}
  */
 export async function getBlockLinks (endpoint, http, blockIndex, cid) {
   const res = await http.dispatchFetch(new URL(`/links/${cid}`, endpoint).toString(), {
