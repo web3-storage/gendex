@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/web3-storage/gendex/compare/v4.0.0...v5.0.0) (2023-06-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* write well-known .idx in waitUntil after verify
+
+### Features
+
+* write well-known .idx in waitUntil after verify ([ca5cd7a](https://github.com/web3-storage/gendex/commit/ca5cd7a1b345f7f0c167637c40c5f1955dabad09))
+
 ## [4.0.0](https://github.com/web3-storage/gendex/compare/v3.0.0...v4.0.0) (2023-06-22)
 
 
