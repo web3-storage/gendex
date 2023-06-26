@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.0.1](https://github.com/web3-storage/gendex/compare/v6.0.0...v6.0.1) (2023-06-26)
+
+
+### Bug Fixes
+
+* v0 CIDs ([4ccb90b](https://github.com/web3-storage/gendex/commit/4ccb90bfa0266e4d88251d089548fc8b5baea24a))
+
 ## [6.0.0](https://github.com/web3-storage/gendex/compare/v5.1.0...v6.0.0) (2023-06-26)
 
 
