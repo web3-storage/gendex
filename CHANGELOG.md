@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.0](https://github.com/web3-storage/gendex/compare/v5.0.0...v5.1.0) (2023-06-23)
+
+
+### Features
+
+* return more info from /links endpoint ([e4e9928](https://github.com/web3-storage/gendex/commit/e4e992809e5f5470f300514d05a5466509ce016c))
+
 ## [5.0.0](https://github.com/web3-storage/gendex/compare/v4.0.0...v5.0.0) (2023-06-22)
 
 
