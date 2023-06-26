@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.1.0](https://github.com/web3-storage/gendex/compare/v6.0.1...v6.1.0) (2023-06-26)
+
+
+### Features
+
+* temporarily disable existence checks ([3a734fe](https://github.com/web3-storage/gendex/commit/3a734fe3bf61d6244c069beacc3c81fdb4d82e5a))
+
+
+### Bug Fixes
+
+* block offsets ([77e69bd](https://github.com/web3-storage/gendex/commit/77e69bd547c56092a053f0677e336a34e41409e9))
+
 ## [6.0.1](https://github.com/web3-storage/gendex/compare/v6.0.0...v6.0.1) (2023-06-26)
 
 
