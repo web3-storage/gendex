@@ -1,14 +1,16 @@
 import { ErrorResponse } from './lib/errors.js'
 import shard from './handlers/shard.js'
 import block from './handlers/block.js'
-import indexes from './handlers/indexes.js'
+import generateIndexes from './handlers/indexes-generate.js'
+import writeIndexes from './handlers/indexes-write.js'
 
 const Handlers = {
   PUT: {
     '/block/': block
   },
   POST: {
-    '/indexes': indexes,
+    '/indexes/generate': generateIndexes,
+    '/indexes': writeIndexes,
     '/shard/': shard
   }
 }

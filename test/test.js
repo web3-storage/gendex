@@ -8,7 +8,7 @@ import { equals } from 'multiformats/bytes'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
-import { putShardIndex, getIndexes, putBlockIndex } from './helpers.js'
+import { putShardIndex, getIndexes, putBlockIndexes } from './helpers.js'
 
 const endpoint = new URL('http://localhost:8787')
 const fixtures = {
@@ -84,11 +84,13 @@ describe('gendex', () => {
     await putShardIndex(endpoint, dispatcher, fixtures.single.root, fixtures.single.shards[0])
 
     const indexes = await getIndexes(endpoint, dispatcher, fixtures.single.shards)
+    const indexDatas = []
 
     // @ts-expect-error
     for await (const indexData of indexes) {
-      await putBlockIndex(endpoint, dispatcher, indexData)
+      indexDatas.push(indexData)
     }
+    await putBlockIndexes(endpoint, dispatcher, indexDatas)
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
     const mhashes = [fixtures.single.root.multihash]
@@ -129,11 +131,13 @@ describe('gendex', () => {
     }
 
     const indexes = await getIndexes(endpoint, dispatcher, fixtures.multi.shards)
+    const indexDatas = []
 
     // @ts-expect-error
     for await (const indexData of indexes) {
-      await putBlockIndex(endpoint, dispatcher, indexData)
+      indexDatas.push(indexData)
     }
+    await putBlockIndexes(endpoint, dispatcher, indexDatas)
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
     const mhashes = [fixtures.multi.root.multihash]

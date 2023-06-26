@@ -35,3 +35,14 @@ export type Offset = number
 
 export interface BlockIndex extends Map<UnknownLink, Map<CARLink, Offset>> {}
 export interface ShardIndex extends Map<CARLink, Map<UnknownLink, Offset>> {}
+
+export interface IndexData {
+  shard: CARLink
+  block: UnknownLink
+  offset: number
+  length: number
+}
+
+export interface BlockIndexData extends IndexData {
+  links: IndexData[]
+}

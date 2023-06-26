@@ -28,13 +28,12 @@ export async function putShardIndex (endpoint, http, root, shard) {
  * Write an index for the provided indexed block.
  * @param {URL} endpoint
  * @param {Dispatcher} http
- * @param {import('../src/handlers/indexes').BlocklyIndexData} indexData
+ * @param {import('../src/handlers/indexes-generate').BlocklyIndexData[]} indexDatas
  */
-export async function putBlockIndex (endpoint, http, indexData) {
-  const res = await http.dispatchFetch(new URL(`/block/${indexData.block}`, endpoint).toString(), {
-    method: 'PUT',
-    // @ts-expect-error
-    body: writeIndex(indexData)
+export async function putBlockIndexes (endpoint, http, indexDatas) {
+  const res = await http.dispatchFetch(new URL('/indexes', endpoint).toString(), {
+    method: 'POST',
+    body: json.encode(indexDatas)
   })
   assert.equal(res.status, 200)
 }
@@ -46,18 +45,18 @@ export async function putBlockIndex (endpoint, http, indexData) {
  * @param {import('cardex/api').CARLink[]} shards
  */
 export async function getIndexes (endpoint, http, shards) {
-  const res = await http.dispatchFetch(new URL('/indexes', endpoint).toString(), {
+  const res = await http.dispatchFetch(new URL('/indexes/generate', endpoint).toString(), {
     method: 'POST',
     body: json.encode(shards)
   })
   assert.equal(res.status, 200)
   assert(res.body)
-  const ndjsonParser = /** @type {Parse<import('../src/handlers/indexes').BlocklyIndexData>} */(new Parse(json.parse))
+  const ndjsonParser = /** @type {Parse<import('../src/handlers/indexes-generate').BlocklyIndexData>} */(new Parse(json.parse))
   return res.body.pipeThrough(ndjsonParser)
 }
 
 /**
- * @param {import('../src/handlers/indexes').BlocklyIndexData} indexData
+ * @param {import('../src/handlers/indexes-generate').BlocklyIndexData} indexData
  * @returns {import('cardex/reader/api').Readable<Uint8Array>}
  */
 export function writeIndex (indexData) {

@@ -10,8 +10,9 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 ## Usage
 
 * [`POST /shard/:root-cid/:car-cid`](#post-shardroot-cidcar-cid) - Build a CAR index.
-* [`POST /indexes`](#post-indexes) - Get blockly index data for blocks in the passed CAR shards.
-* [`PUT /block/:cid`](#put-blockcid) - Put a block index.
+* [`POST /indexes/generate`](#post-indexes-generate) - Get blockly index data for blocks in the passed CAR shards.
+* [`POST /indexes`](#post-indexes) - Write block indexes.
+* [`PUT /block/:cid`](#put-blockcid) - Write a block index.
 
 ### `POST /shard/:root-cid/:car-cid`
 
