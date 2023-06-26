@@ -1,20 +1,15 @@
 import { ErrorResponse } from './lib/errors.js'
 import shard from './handlers/shard.js'
 import block from './handlers/block.js'
-import index from './handlers/index.js'
-import links from './handlers/links.js'
+import indexes from './handlers/indexes.js'
 
 const Handlers = {
   PUT: {
     '/block/': block
   },
-  HEAD: {
-    '/block/': block
-  },
   POST: {
-    '/index': index,
-    '/shard/': shard,
-    '/links/': links
+    '/indexes': indexes,
+    '/shard/': shard
   }
 }
 

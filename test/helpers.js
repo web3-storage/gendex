@@ -5,8 +5,7 @@ import { MultihashIndexSortedWriter } from 'cardex/multihash-index-sorted'
 import * as json from '@ipld/dag-json'
 import { Map as LinkMap } from 'lnmap'
 import * as Link from 'multiformats/link'
-import { getAnyMapEntry } from '../src/lib/map.js'
-import { readMultiIndex } from '../src/lib/multi-index.js'
+import { Parse } from 'ndjson-web'
 
 /**
  * @typedef {{ dispatchFetch (input: RequestInfo, init?: RequestInit): Promise<Response> }} Dispatcher
@@ -26,74 +25,51 @@ export async function putShardIndex (endpoint, http, root, shard) {
 }
 
 /**
- * Write an index for the provided block.
+ * Write an index for the provided indexed block.
  * @param {URL} endpoint
  * @param {Dispatcher} http
- * @param {import('../src/bindings').BlockIndex} blockIndex
- * @param {import('multiformats').UnknownLink} cid
- * @param {import('multiformats').UnknownLink[]} links
+ * @param {import('../src/handlers/indexes').BlocklyIndexData} indexData
  */
-export async function putBlockIndex (endpoint, http, blockIndex, cid, links) {
-  const res = await http.dispatchFetch(new URL(`/block/${cid}`, endpoint).toString(), {
+export async function putBlockIndex (endpoint, http, indexData) {
+  const res = await http.dispatchFetch(new URL(`/block/${indexData.block}`, endpoint).toString(), {
     method: 'PUT',
     // @ts-expect-error
-    body: writeMultiIndex(blockIndex, [cid, ...links])
+    body: writeIndex(indexData)
   })
   assert.equal(res.status, 200)
 }
 
 /**
- * Get block indexs of the passed shards.
+ * Index the blocks in the passed shards.
  * @param {URL} endpoint
  * @param {Dispatcher} http
  * @param {import('cardex/api').CARLink[]} shards
  */
-export async function getIndex (endpoint, http, shards) {
-  const res = await http.dispatchFetch(new URL('/index', endpoint).toString(), {
+export async function getIndexes (endpoint, http, shards) {
+  const res = await http.dispatchFetch(new URL('/indexes', endpoint).toString(), {
     method: 'POST',
     body: json.encode(shards)
   })
   assert.equal(res.status, 200)
   assert(res.body)
-  return readMultiIndex(res.body)
+  const ndjsonParser = /** @type {Parse<import('../src/handlers/indexes').BlocklyIndexData>} */(new Parse(json.parse))
+  return res.body.pipeThrough(ndjsonParser)
 }
 
 /**
- * Get links for a block (as base58 encoded multihash strings).
- * @param {URL} endpoint
- * @param {Dispatcher} http
- * @param {import('../src/bindings').BlockIndex} blockIndex
- * @param {import('multiformats').UnknownLink} cid
- * @returns {Promise<{ links: import('multiformats').UnknownLink[] }>}
- */
-export async function getBlockLinks (endpoint, http, blockIndex, cid) {
-  const res = await http.dispatchFetch(new URL(`/links/${cid}`, endpoint).toString(), {
-    method: 'POST',
-    // @ts-expect-error
-    body: writeMultiIndex(blockIndex, [cid])
-  })
-  assert.equal(res.status, 200)
-  return json.decode(new Uint8Array(await res.arrayBuffer()))
-}
-
-/**
- * @param {import('../src/bindings').BlockIndex} blockIndex
- * @param {import('multiformats').UnknownLink[]} blocks
+ * @param {import('../src/handlers/indexes').BlocklyIndexData} indexData
  * @returns {import('cardex/reader/api').Readable<Uint8Array>}
  */
-export function writeMultiIndex (blockIndex, blocks) {
+export function writeIndex (indexData) {
   /** @type {import('../src/bindings').ShardIndex} */
-  const shardIndex = new LinkMap()
-  for (const blockCID of blocks) {
-    const offsets = blockIndex.get(blockCID)
-    if (!offsets) throw new Error(`block not indexed: ${blockCID}`)
-    const [shard, offset] = getAnyMapEntry(offsets)
-    let blocks = shardIndex.get(shard)
+  const shardIndex = new LinkMap([[indexData.shard, new LinkMap([[indexData.block, indexData.offset]])]])
+  for (const link of indexData.links) {
+    let blocks = shardIndex.get(link.shard)
     if (!blocks) {
       blocks = new LinkMap()
-      shardIndex.set(shard, blocks)
+      shardIndex.set(link.shard, blocks)
     }
-    blocks.set(blockCID, offset)
+    blocks.set(link.block, link.offset)
   }
 
   const { readable, writable } = new TransformStream()

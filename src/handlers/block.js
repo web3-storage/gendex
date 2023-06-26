@@ -19,21 +19,24 @@ export default {
     const indexMh = await sha256.digest(indexBytes)
     const indexMhStr = mhToString(indexMh)
 
-    if (!(await env.BLOCKLY.head(`${blockMhStr}/${indexMhStr}.idx`))) {
-      await env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes)
-    }
-
-    ctx.waitUntil((async () => {
-      if (!(await env.BLOCKLY.head(`${blockMhStr}/.idx`))) {
-        // Read the index to verify it's complete and formatted correctly
-        const blockIndex = await readMultiIndex(new Blob([indexBytes]).stream())
-        if (!blockIndex.has(blockCID)) {
-          throw new Error(`missing index data for block: ${blockCID}`)
+    await Promise.all([
+      (async () => {
+        if (!(await env.BLOCKLY.head(`${blockMhStr}/${indexMhStr}.idx`))) {
+          await env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes)
         }
-        // TODO: verify linked blocks?
-        await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexBytes)
-      }
-    })())
+      })(),
+      (async () => {
+        if (!(await env.BLOCKLY.head(`${blockMhStr}/.idx`))) {
+          // Read the index to verify it's complete and formatted correctly
+          const blockIndex = await readMultiIndex(new Blob([indexBytes]).stream())
+          if (!blockIndex.has(blockCID)) {
+            throw new Error(`missing index data for block: ${blockCID}`)
+          }
+          // TODO: verify linked blocks?
+          await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexBytes)
+        }
+      })()
+    ])
 
     return new Response()
   }

@@ -8,7 +8,7 @@ import { equals } from 'multiformats/bytes'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { MultiIndexReader } from 'cardex/multi-index'
 import { mhToString } from '../src/lib/multihash.js'
-import { putShardIndex, getIndex, getBlockLinks, putBlockIndex } from './helpers.js'
+import { putShardIndex, getIndexes, putBlockIndex } from './helpers.js'
 
 const endpoint = new URL('http://localhost:8787')
 const fixtures = {
@@ -83,21 +83,11 @@ describe('gendex', () => {
 
     await putShardIndex(endpoint, dispatcher, fixtures.single.root, fixtures.single.shards[0])
 
-    const blockIndex = await getIndex(endpoint, dispatcher, fixtures.single.shards)
-    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.single.root)
+    const indexes = await getIndexes(endpoint, dispatcher, fixtures.single.shards)
 
-    /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
-    const queue = [{ cid: fixtures.single.root, links: rootLinks }]
-    while (true) {
-      const item = queue.shift()
-      if (!item) break
-
-      await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
-
-      for (const cid of item.links) {
-        const { links } = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
-        queue.push({ cid, links })
-      }
+    // @ts-expect-error
+    for await (const indexData of indexes) {
+      await putBlockIndex(endpoint, dispatcher, indexData)
     }
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')
@@ -138,21 +128,11 @@ describe('gendex', () => {
       await putShardIndex(endpoint, dispatcher, fixtures.multi.root, shard)
     }
 
-    const blockIndex = await getIndex(endpoint, dispatcher, fixtures.multi.shards)
-    const { links: rootLinks } = await getBlockLinks(endpoint, dispatcher, blockIndex, fixtures.multi.root)
+    const indexes = await getIndexes(endpoint, dispatcher, fixtures.multi.shards)
 
-    /** @type {Array<{ cid: import('multiformats').UnknownLink, links: import('multiformats').UnknownLink[] }>} */
-    const queue = [{ cid: fixtures.multi.root, links: rootLinks }]
-    while (true) {
-      const item = queue.shift()
-      if (!item) break
-
-      await putBlockIndex(endpoint, dispatcher, blockIndex, item.cid, item.links)
-
-      for (const cid of item.links) {
-        const { links } = await getBlockLinks(endpoint, dispatcher, blockIndex, cid)
-        queue.push({ cid, links })
-      }
+    // @ts-expect-error
+    for await (const indexData of indexes) {
+      await putBlockIndex(endpoint, dispatcher, indexData)
     }
 
     const blockly = await miniflare.getR2Bucket('BLOCKLY')

@@ -10,8 +10,7 @@ Cloudflare worker to generate indexes for a given root CID. The CAR CID should a
 ## Usage
 
 * [`POST /shard/:root-cid/:car-cid`](#post-shardroot-cidcar-cid) - Build a CAR index.
-* [`POST /index`](#post-index) - Get multi-index for CAR shards in request body.
-* [`POST /links/:cid`](#post-linkscid) - Get block links.
+* [`POST /indexes`](#post-indexes) - Get blockly index data for blocks in the passed CAR shards.
 * [`PUT /block/:cid`](#put-blockcid) - Put a block index.
 
 ### `POST /shard/:root-cid/:car-cid`
@@ -24,7 +23,7 @@ Example:
 curl -X POST https://gendex.worker/shard/bafybeia7yvvioltmupfxvkcfef75htxqbyylpot5ddxuzla5zaokjyrvfu/bagbaierai3ot5krlbplbapqbym5immraoercsqwz2v226i77dcxnxrfaazbq
 ```
 
-Note: if a DAG exists in multiple CARs, you"ll need to send multiple requests with the same root CID for each CAR CID.
+Note: if a DAG exists in multiple CARs, you'll need to send multiple requests with the same root CID for each CAR CID.
 
 Response:
 
@@ -52,9 +51,9 @@ Response:
 }
 ```
 
-### `POST /index`
+### `POST /indexes`
 
-Get a [multi-index index](https://github.com/alanshaw/cardex#multi-index-index) containing block CAR and offset information for shards passed in the request body.
+Get blockly indexes for the blocks in the passed CAR shards in the request body.
 
 Example:
 
@@ -63,30 +62,35 @@ curl -X POST https://gendex.worker/index
 # TODO: example needs body data
 ```
 
-### `POST /links/:cid`
+Returns an nddagjson response:
 
-Obtain CIDs for links of `:cid`.
-
-Example:
-
-```sh
-curl -X POST https://gendex.worker/links/bafybeifvf4imqksp7d5tkbf6hsxx7bg5kexbpdojfrl7ibrpi3mzaws3b4
-```
-
-Response:
-
-```json
-[
-  {
-    "/": "bafkreiaujy7eipaqouojrzg44gxzmclhip7wdx4jcdlc2gjkxex3qmtuoe"
-  },
-  {
-    "/": "bafkreihhvnnlp6bnnfnh7todbiovk5e2x2qdk3xl4lldlkwbspmjnzkxj4"
-  },
-  {
-    "/": "bafkreicppa4bymzulkqm5b5xnru67y5e6osv2rmnqef3ncyolw7i6cm4f4"
-  }
-]
+```js
+{
+  shard: CID(bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q)
+  block: CID(bafybeifsspna7evg6wtxfluwbt36c3e4yapq6vze3vaut2izwl72ombxrm),
+  offset: 862398,
+  length: 831,
+  links: [
+    {
+      shard: CID(bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q),
+      block: CID(bafkreibwp3p5adaxnk2y5ecqliqq3sqmwe66j2cxcmykn3tnxewdc47hie),
+      offset: 21,
+      length: 60033
+    },
+    {
+      shard: CID(bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q),
+      block: CID(bafkreidqychd3wyw4rixs2avqdkvlp6q7is4w3c6q2ef5h4hx77rkmm6xa),
+      offset: 60057,
+      length: 54154
+    },
+    {
+      shard: CID(bagbaieradoadc65goax2aehjn73oevbx6cbxjl5xp7k4vii24635mxkki42q),
+      block: CID(bafkreicpfqmunngoi5vixmfhbngefx5sdpo4tqbtbbdxdrgyuosohbki3i),
+      offset: 114214,
+      length: 45056
+    }
+  ]
+}
 ```
 
 ### `PUT /block/:cid`
