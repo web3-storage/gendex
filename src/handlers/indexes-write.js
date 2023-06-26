@@ -23,14 +23,14 @@ export default {
 
       await Promise.all([
         (async () => {
-          if (!(await env.BLOCKLY.head(`${blockMhStr}/${indexMhStr}.idx`))) {
-            await env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes)
-          }
+          // if (!(await env.BLOCKLY.head(`${blockMhStr}/${indexMhStr}.idx`))) {
+          await env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes)
+          // }
         })(),
         (async () => {
-          if (!(await env.BLOCKLY.head(`${blockMhStr}/.idx`))) {
-            await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexBytes)
-          }
+          // if (!(await env.BLOCKLY.head(`${blockMhStr}/.idx`))) {
+          await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexBytes)
+          // }
         })()
       ])
     }))
