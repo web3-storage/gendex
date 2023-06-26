@@ -1,5 +1,17 @@
 # Changelog
 
+## [6.0.0](https://github.com/web3-storage/gendex/compare/v5.1.0...v6.0.0) (2023-06-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* generate indexes from CAR data
+
+### Features
+
+* batch write indexes ([9b84159](https://github.com/web3-storage/gendex/commit/9b84159cc9225be301aa0e1edcb691ad7360e4d2))
+* generate indexes from CAR data ([723ccff](https://github.com/web3-storage/gendex/commit/723ccff0e3d69bcb326fbb970c731f7d33c5f508))
+
 ## [5.1.0](https://github.com/web3-storage/gendex/compare/v5.0.0...v5.1.0) (2023-06-23)
 
 
