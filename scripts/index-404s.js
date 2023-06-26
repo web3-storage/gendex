@@ -4,12 +4,12 @@ import { getRecent404s } from './lib/analytics.js'
 import { notNully } from './util.js'
 import { getSuperDAG } from './lib/super-dag.js'
 import { putBlocklyIndexes } from './lib/blockly.js'
+import { getShards } from './lib/dudewhere.js'
 
 dotenv.config()
 
 const INTERVAL = 30_000
 const RECENT_404_LIMIT = 25
-const MAX_BLOCKS = 10_000
 
 async function main () {
   const analyticsConfig = {
@@ -24,6 +24,15 @@ async function main () {
       secretAccessKey: notNully(process.env.DYNAMO_SECRET_ACCESS_KEY)
     },
     tableName: notNully(process.env.DYNAMO_TABLE)
+  }
+  const dudeWhereConfig = {
+    region: notNully(process.env.R2_REGION),
+    endpoint: notNully(process.env.R2_ENDPOINT),
+    credentials: {
+      accessKeyId: notNully(process.env.R2_ACCESS_KEY_ID),
+      secretAccessKey: notNully(process.env.R2_SECRET_ACCESS_KEY)
+    },
+    bucket: notNully(process.env.DUDEWHERE_BUCKET_NAME)
   }
   const blocklyConfig = {
     endpoint: new URL(notNully(process.env.GENDEX_ENDPOINT))
@@ -57,8 +66,17 @@ async function main () {
         continue
       }
 
+      let shards
       try {
-        await putBlocklyIndexes(blocklyConfig.endpoint, root, MAX_BLOCKS)
+        shards = await getShards(root, dudeWhereConfig)
+      } catch (err) {
+        console.warn(err)
+        previouslyFailed.add(root.toString())
+        continue
+      }
+
+      try {
+        await putBlocklyIndexes(blocklyConfig.endpoint, shards)
       } catch (err) {
         console.warn(err)
         previouslyFailed.add(root.toString())
