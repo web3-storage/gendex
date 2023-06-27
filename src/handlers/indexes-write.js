@@ -20,18 +20,9 @@ export default {
       const indexMh = await sha256.digest(indexBytes)
       const indexMhStr = mhToString(indexMh)
       const blockMhStr = mhToString(indexData.block.multihash)
-
       await Promise.all([
-        (async () => {
-          // if (!(await env.BLOCKLY.head(`${blockMhStr}/${indexMhStr}.idx`))) {
-          await env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes)
-          // }
-        })(),
-        (async () => {
-          // if (!(await env.BLOCKLY.head(`${blockMhStr}/.idx`))) {
-          await env.BLOCKLY.put(`${blockMhStr}/.idx`, indexBytes)
-          // }
-        })()
+        env.BLOCKLY.put(`${blockMhStr}/${indexMhStr}.idx`, indexBytes.buffer),
+        env.BLOCKLY.put(`${blockMhStr}/.idx`, indexBytes.buffer)
       ])
     }))
 

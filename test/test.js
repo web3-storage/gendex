@@ -46,8 +46,9 @@ describe('gendex', () => {
       globalAsyncIO: true,
       // wranglerConfigPath: 'test',
       modules: true,
-      r2Buckets: ['CARPARK', 'SATNAV', 'DUDEWHERE', 'BLOCKLY']
-      // ,r2Persist: true
+      r2Buckets: ['CARPARK', 'SATNAV', 'DUDEWHERE'],
+      // r2Persist: true,
+      kvNamespaces: ['BLOCKLY']
     })
     /** @ts-expect-error */
     dispatcher = miniflare
@@ -92,20 +93,20 @@ describe('gendex', () => {
     }
     await putBlockIndexes(endpoint, dispatcher, indexDatas)
 
-    const blockly = await miniflare.getR2Bucket('BLOCKLY')
+    const blockly = await miniflare.getKVNamespace('BLOCKLY')
     const mhashes = [fixtures.single.root.multihash]
     while (true) {
       const blockMh = mhashes.shift()
       if (!blockMh) break
 
-      const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
+      const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`, { type: 'arrayBuffer' })
       assert(indexRes, `missing index: ${mhToString(blockMh)}/.idx`)
-      const indexMh = await sha256.digest(new Uint8Array(await indexRes.arrayBuffer()))
+      const indexMh = await sha256.digest(new Uint8Array(indexRes))
 
-      const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
+      const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`, { type: 'stream' })
       assert(res, `missing index: ${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
 
-      const reader = MultiIndexReader.createReader({ reader: res.body.getReader() })
+      const reader = MultiIndexReader.createReader({ reader: res.getReader() })
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
@@ -139,20 +140,20 @@ describe('gendex', () => {
     }
     await putBlockIndexes(endpoint, dispatcher, indexDatas)
 
-    const blockly = await miniflare.getR2Bucket('BLOCKLY')
+    const blockly = await miniflare.getKVNamespace('BLOCKLY')
     const mhashes = [fixtures.multi.root.multihash]
     while (true) {
       const blockMh = mhashes.shift()
       if (!blockMh) break
 
-      const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`)
+      const indexRes = await blockly.get(`${mhToString(blockMh)}/.idx`, { type: 'arrayBuffer' })
       assert(indexRes, `missing index: ${mhToString(blockMh)}/.idx`)
-      const indexMh = await sha256.digest(new Uint8Array(await indexRes.arrayBuffer()))
+      const indexMh = await sha256.digest(new Uint8Array(indexRes))
 
-      const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
+      const res = await blockly.get(`${mhToString(blockMh)}/${mhToString(indexMh)}.idx`, { type: 'stream' })
       assert(res, `missing index: ${mhToString(blockMh)}/${mhToString(indexMh)}.idx`)
 
-      const reader = MultiIndexReader.createReader({ reader: res.body.getReader() })
+      const reader = MultiIndexReader.createReader({ reader: res.getReader() })
       while (true) {
         const { done, value } = await reader.read()
         if (done) break

@@ -10,7 +10,7 @@ export interface Env {
   CARPARK: R2Bucket
   SATNAV: R2Bucket
   DUDEWHERE: R2Bucket
-  BLOCKLY: R2Bucket
+  BLOCKLY: KVNamespace
 }
 
 export interface BlockDecoders {
