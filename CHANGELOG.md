@@ -1,5 +1,12 @@
 # Changelog
 
+## [6.2.0](https://github.com/web3-storage/gendex/compare/v6.1.0...v6.2.0) (2023-06-27)
+
+
+### Features
+
+* use KV ([c0a25d8](https://github.com/web3-storage/gendex/commit/c0a25d8f292e237f08f676b789dfa4afe609bcc0))
+
 ## [6.1.0](https://github.com/web3-storage/gendex/compare/v6.0.1...v6.1.0) (2023-06-26)
 
 
